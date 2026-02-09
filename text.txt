@@ -1,0 +1,37 @@
+
+## ⚙️ Configuração JSONBin
+
+O sistema usa JSONBin.io para armazenar o total REAL de todos os usuários:
+
+- **Bin ID**: `6989462543b1c97be97049c4`
+- **API Key**: `$2a$10$swTxyIonZHKjAs9AgVv7VOBgh3Qz8ArBujv6z7fWTNtkXvgr/TCZC`
+- **Limite**: 100 requisições/dia (plano free)
+
+## 🔄 Como Funciona o Calculômetro
+
+1. **Usuário A** calcula R$ 100 → JSONBin: R$ 100
+2. **Usuário B** calcula R$ 200 → JSONBin: R$ 300
+3. **Ambos veem**: "Total calculado por usuários: R$ 300"
+
+## 📱 Instalação como PWA
+
+1. Acesse o site no Chrome/Edge
+2. Clique em "Instalar" ou "Adicionar à tela inicial"
+3. Use como aplicativo nativo
+
+## 🛠 Tecnologias
+
+- HTML5, CSS3, JavaScript (ES6+)
+- LocalStorage (dados locais)
+- JSONBin.io (API para dados compartilhados)
+- PWA (Progressive Web App)
+
+## 📊 Status do Sistema
+
+- ✅ **Online**: Dados sincronizados em tempo real
+- ⚠️ **Offline**: Dados salvos localmente, sincroniza ao voltar
+- 🔄 **Polling**: Atualiza a cada 30 segundos
+
+---
+
+**Desenvolvido por Anderson Andrade**

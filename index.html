@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD Calc - Simulador de Preços Públicos</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header com título e subtítulo -->
+        <header class="app-header">
+            <h1 class="app-title">AD Calc</h1>
+            <h2 class="app-subtitle">Simulador de Preços Públicos CAP/DEPROT</h2>
+        </header>
+
+        <!-- Observação sobre a tabela -->
+        <p class="observacao">
+            Conforme <a href="pdfs/tabela_precos_fevereiro_2026.pdf" target="_blank" rel="noopener noreferrer">Tabela de Taxas e Emolumentos atualizada em Fevereiro/2026</a>
+        </p>
+
+        <!-- Contadores -->
+        <div class="counters-container">
+            <div class="counter-card minimal">
+                <div class="counter-label">Sua Sessão</div>
+                <div class="counter-value subtle" id="sessionCounter">R$ 0,00</div>
+                <div class="counter-description">Hoje</div>
+            </div>
+            <div class="counter-card minimal">
+                <div class="counter-label">AD Calc</div>
+                <div class="counter-value subtle" id="globalCounter">Carregando...</div>
+                <div class="counter-description">Total calculado por usuários até agora</div>
+                <div class="counter-update" id="lastUpdate"></div>
+            </div>
+        </div>
+        
+        <form id="simuladorForm">
+            <div class="form-section">
+                <select id="assunto" onchange="changeLabel()" required>
+                    <option value="" disabled selected>Selecione o assunto</option>
+                    <option value="edificacao_nova">Alvará de Aprovação de Edificação Nova</option>
+                    <option value="execucao">Alvará de Execução</option>
+                    <option value="reforma">Alvará de Aprovação de Reforma</option>
+                    <option value="projeto_modificativo_edificacao">Projeto Modificativo de Alvará de Aprovação e Execução de Edificação Nova</option>
+                    <option value="projeto_modificativo_reforma">Projeto Modificativo de Alvará de Aprovação e Execução de Reforma</option>
+                    <option value="avanco_grua">Alvará de Autorização de Avanço de Grua Sobre o Espaço Público</option>
+                    <option value="tapume">Avanço do tapume sobre parte do passeio público</option>
+                    <option value="estande_vendas">Alvará de Autorização de Implantação e/ou Utilização de Estande de Vendas</option>
+                    <option value="alvara_heliponto">Alvará de Instalação de Heliponto</option>
+                    <option value="execucao_erb">Alvará de Execução de Estação Rádio Base - ERB</option>
+                    <option value="reuniao">Alvará de Funcionamento para Local de Reunião</option>
+                    <option value="certificado_seguranca">Certificado de Segurança</option>
+                    <option value="acessibilidade">Certificado de Acessibilidade</option>
+                    <option value="sistema_seguranca">Cadastro de Sistema Especial de Segurança</option>
+                    <option value="tanques_bombas">Cadastro ou Manutenção de tanque de armazenagem, bomba, filtro de combustível e equipamentos afins</option>
+                    <option value="desmembramento_remembramento">Alvará para Desmembramento/Remembramento</option>
+                    <option value="reparcelamento">Alvará para Reparcelamento</option>
+                    <option value="diretrizes_urbanisticas">Certidão de Diretrizes Urbanísticas</option>
+                </select>
+            </div>
+
+            <!-- Campos padrão -->
+            <div id="areaStandardContainer" class="form-section">
+                <label id="areaLabel" for="area">Informe a área em m²:</label>
+                <input type="number" id="area" step="1" min="0" required>
+            </div>
+
+            <div id="areaConstruidaContainer" class="form-section">
+                <label for="areaConstruida">Área total construída (m²):</label>
+                <input type="number" id="areaConstruida" step="1" min="0" required>
+            </div>
+
+            <!-- Campos específicos para Reforma -->
+            <div id="reformaContainer" class="form-section" style="display: none;">
+                <label for="areaTotalUso">Área Total referente ao uso indicado (Computável + Não Computável) *</label>
+                <input type="number" id="areaTotalUso" step="1" min="0" required>
+                
+                <label for="areaTotalReformar">Total de Área a Reformar (Computável + Não Computável)</label>
+                <input type="number" id="areaTotalReformar" step="1" min="0">
+                
+                <label for="areaTotalRegularizar">Total de Área a Regularizar (Computável + Não Computável)</label>
+                <input type="number" id="areaTotalRegularizar" step="1" min="0">
+                
+                <label for="areaTotalConstruir">Total de Área a Construir (Computável + Não Computável)</label>
+                <input type="number" id="areaTotalConstruir" step="1" min="0">
+            </div>
+            
+            <!-- Campo específico para Quantidade de Unidades -->
+            <div id="quantidadeUnidadesContainer" class="form-section" style="display: none;">
+                <label for="quantidadeUnidades">Quantidade de unidades:</label>
+                <input type="number" id="quantidadeUnidades" step="1" min="1" value="1">
+            </div>
+
+            <!-- Campos específicos para Projeto Modificativo de Reforma -->
+            <div id="projetoModificativoReformaContainer" class="form-section" style="display: none;">
+                <h3>Quadro de áreas do Projeto Aprovado</h3>
+                <label for="areaConstruirAprovado">Área a construir (m²):</label>
+                <input type="number" id="areaConstruirAprovado" step="1" min="0" required>
+                <label for="areaReformarAprovado">Área a reformar (m²):</label>
+                <input type="number" id="areaReformarAprovado" step="1" min="0" required>
+                <label for="areaRegularizarAprovado">Área a regularizar (m²):</label>
+                <input type="number" id="areaRegularizarAprovado" step="1" min="0">
+                <label for="areaTotalAprovado">Área total (m²):</label>
+                <input type="number" id="areaTotalAprovado" step="1" min="0" required>
+            
+                <h3>Quadro de áreas do Projeto Modificativo</h3>
+                <label for="areaConstruirModificativo">Área a construir (m²):</label>
+                <input type="number" id="areaConstruirModificativo" step="1" min="0" required>
+                <label for="areaReformarModificativo">Área a reformar (m²):</label>
+                <input type="number" id="areaReformarModificativo" step="1" min="0" required>
+                <label for="areaRegularizarModificativo">Área a regularizar (m²):</label>
+                <input type="number" id="areaRegularizarModificativo" step="1" min="0">
+                <label for="areaTotalModificativo">Área total (m²):</label>
+                <input type="number" id="areaTotalModificativo" step="1" min="0" required>
+            </div>
+
+            <button type="button" onclick="calculate()">Calcular</button>
+
+            <div id="resultadoContainer" style="display: none;">
+                <div class="resultado-content">
+                    <p id="resultado"></p>
+                    <button type="button" id="copyButton" class="copy-btn" onclick="copyResult()" title="Copiar valor">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                        </svg>
+                        Copiar
+                    </button>
+                </div>
+                <p id="copyFeedback" class="copy-feedback"></p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Configuração JSONBin -->
+    <script>
+        // CONFIGURAÇÃO JSONBIN - TOTAL REAL COMPARTILHADO
+        window.JSONBIN_CONFIG = {
+            BIN_ID: '69895bf4d0ea881f40ac14c1',
+            API_KEY: '$2a$10$swTxyIonZHKjAs9AgVv7VOBgh3Qz8ArBujv6z7fWTNtkXvgr/TCZC',
+            UPDATE_INTERVAL: 30000
+        };
+    </script>
+
+    <script src="script.js"></script>
+    <footer>
+        Desenvolvido por Anderson Andrade
+    </footer>
+</body>
+</html>
