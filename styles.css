@@ -378,3 +378,31 @@ select option:disabled {
 select option:not(:disabled) {
     color: #1e293b;
 }
+/* Estatísticas do contador global */
+.counter-stats {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+#globalCount {
+    font-weight: 600;
+    color: #3b82f6;
+}
+
+/* Tooltip mais rico */
+.counter-value[title] {
+    cursor: help;
+}
+
+/* Efeito quando atualiza */
+.counter-stats.updated {
+    animation: pulseStats 0.5s ease;
+}
+
+@keyframes pulseStats {
+    0% { transform: scale(1); color: #64748b; }
+    50% { transform: scale(1.1); color: #3b82f6; }
+    100% { transform: scale(1); color: #64748b; }
+}
