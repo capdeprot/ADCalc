@@ -187,12 +187,14 @@ async function addToRealGlobalCounter(value) {
         const newCount = currentCount + 1;
         
         console.log(`📊 Novo total: ${formatCurrency(currentTotal)} + ${formatCurrency(value)} = ${formatCurrency(newTotal)}`);
+        console.log(`📊 Total de cálculos: ${currentCount} → ${newCount}`); // NOVA LINHA
         
         const updateData = {
             total: newTotal,
             count: newCount,
             lastUpdated: new Date().toISOString(),
             lastCalculation: value,
+            lastCalculationValue: value,
             description: "AD Calc - Total de cálculos dos usuários"
         };
         
@@ -213,8 +215,10 @@ async function addToRealGlobalCounter(value) {
             
             updateGlobalCounterDisplay();
             animateGlobalCounter();
+            animateGlobalStats(); // NOVA LINHA
             
             localStorage.setItem('adcalc_real_global', newTotal.toString());
+            localStorage.setItem('adcalc_total_calculations', newCount.toString()); // NOVA LINHA
             localStorage.setItem('adcalc_last_update', lastUpdateTime);
             
             console.log(`✅ Total global atualizado: ${formatCurrency(newTotal)} (${newCount} cálculos)`);
@@ -238,22 +242,30 @@ async function addToRealGlobalCounter(value) {
 // ==============================
 function updateGlobalCounterDisplay() {
     const globalCounter = document.getElementById('globalCounter');
+    const globalStats = document.getElementById('globalStats');
+    const globalCount = document.getElementById('globalCount');
     const lastUpdateElement = document.getElementById('lastUpdate');
     
     if (globalCounter) {
         globalCounter.textContent = formatCurrency(realGlobalTotal);
         
-        let tooltip = `Total real de todos os usuários: ${formatCurrency(realGlobalTotal)}`;
+        // Atualizar contagem de cálculos
+        if (globalCount) {
+            globalCount.textContent = totalCalculations.toLocaleString('pt-BR');
+        }
+        
+        // Tooltip detalhado
+        let tooltip = `💰 Total acumulado: ${formatCurrency(realGlobalTotal)}`;
         if (totalCalculations > 0) {
-            tooltip += `\n${totalCalculations.toLocaleString()} cálculo${totalCalculations !== 1 ? 's' : ''} realizado${totalCalculations !== 1 ? 's' : ''}`;
+            tooltip += `\n🧮 ${totalCalculations.toLocaleString('pt-BR')} cálculo${totalCalculations !== 1 ? 's' : ''}`;
             const avg = realGlobalTotal / totalCalculations;
-            tooltip += `\nMédia: ${formatCurrency(avg)}`;
+            tooltip += `\n📊 Média por cálculo: ${formatCurrency(avg)}`;
         }
         if (lastUpdateTime) {
             const updateDate = new Date(lastUpdateTime);
-            tooltip += `\nÚltima atualização: ${updateDate.toLocaleString('pt-BR')}`;
+            tooltip += `\n🕐 Última atualização: ${updateDate.toLocaleString('pt-BR')}`;
         }
-        tooltip += `\nStatus: ${isOnline ? 'Online ✅' : 'Offline ⚠️'}`;
+        tooltip += `\n📡 Status: ${isOnline ? 'Online ✅' : 'Offline ⚠️'}`;
         globalCounter.title = tooltip;
     }
     
@@ -263,11 +275,11 @@ function updateGlobalCounterDisplay() {
         const diffMinutes = Math.floor((now - updateDate) / (1000 * 60));
         
         if (diffMinutes < 1) {
-            lastUpdateElement.textContent = 'Atualizado agora';
+            lastUpdateElement.textContent = 'Agora mesmo';
         } else if (diffMinutes < 60) {
-            lastUpdateElement.textContent = `Atualizado há ${diffMinutes} min`;
+            lastUpdateElement.textContent = `há ${diffMinutes} min`;
         } else {
-            lastUpdateElement.textContent = `Atualizado ${updateDate.toLocaleDateString('pt-BR')}`;
+            lastUpdateElement.textContent = `há ${Math.floor(diffMinutes/60)}h`;
         }
         
         lastUpdateElement.title = `Última sincronização: ${updateDate.toLocaleString('pt-BR')}`;
@@ -807,4 +819,28 @@ function calculate() {
     syncPendingUpdates();
     
     resultadoContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ==============================
+// ANIMAÇÃO DAS ESTATÍSTICAS
+// ==============================
+function animateGlobalStats() {
+    const globalStats = document.getElementById('globalStats');
+    const globalCount = document.getElementById('globalCount');
+    
+    if (globalStats) {
+        globalStats.classList.add('updated');
+        setTimeout(() => {
+            globalStats.classList.remove('updated');
+        }, 500);
+    }
+    
+    if (globalCount) {
+        globalCount.style.transform = 'scale(1.2)';
+        globalCount.style.color = '#3b82f6';
+        setTimeout(() => {
+            globalCount.style.transform = 'scale(1)';
+            globalCount.style.color = '';
+        }, 500);
+    }
 }
