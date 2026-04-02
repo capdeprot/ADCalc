@@ -806,7 +806,7 @@ function calculate() {
     valor = Math.round(valor * 100) / 100;
     currentCalculatedValue = valor;
     
-    resultado.textContent = 'Valor estimado: ' + formatCurrency(valor);
+    resultado.textContent = formatCurrency(valor);
     resultadoContainer.style.display = 'block';
     copyFeedback.style.display = 'none';
     
