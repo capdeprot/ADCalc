@@ -514,6 +514,11 @@ function changeLabel() {
             areaLabel.textContent = 'Área a construir (m²):';
             break;
 
+        case 'revalidacao':
+            areaStandardContainer.style.display = 'block';
+            areaLabel.textContent = 'Área total construída (m²):';
+            break;
+        
         case 'avanco_grua':
         case 'tapume':
             areaStandardContainer.style.display = 'block';
@@ -604,6 +609,13 @@ function calculate() {
             }
             break;
 
+        case 'revalidacao':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área total construída no alvará a ser revalidado')) return;
+            area = parseFloat(area);
+            valor = area * 3.11;
+            break;
+        
         case 'projeto_modificativo_edificacao':
             var area = document.getElementById('area').value;
             var areaConstruida = document.getElementById('areaConstruida').value;
