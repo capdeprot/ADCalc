@@ -516,7 +516,7 @@ function changeLabel() {
 
         case 'revalidacao':
             areaStandardContainer.style.display = 'block';
-            areaLabel.textContent = 'Área total construída (m²):';
+            areaLabel.textContent = 'Área total construída no alvará a ser revalidado (m²):';
             break;
         
         case 'avanco_grua':
@@ -611,7 +611,7 @@ function calculate() {
 
         case 'revalidacao':
             var area = document.getElementById('area').value;
-            if (!validateRequired(area, 'a área total construída no alvará a ser revalidado')) return;
+            if (!validateRequired(area, 'a área total construída')) return;
             area = parseFloat(area);
             valor = area * 3.11;
             break;
