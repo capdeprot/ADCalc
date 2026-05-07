@@ -13,6 +13,7 @@ A ferramenta cobre 18 tipos de processo, distribuídos entre alvarás, certifica
 - Alvará de Aprovação de Edificação Nova
 - Alvará de Execução
 - Alvará de Aprovação de Reforma
+- Revalidação de Alvará de Aprovação
 - Projeto Modificativo de Alvará de Aprovação e Execução de Edificação Nova
 - Projeto Modificativo de Alvará de Aprovação e Execução de Reforma
 - Alvará de Autorização de Avanço de Grua Sobre o Espaço Público
