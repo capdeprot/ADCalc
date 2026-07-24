@@ -1,636 +1,1067 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+// ==============================
+// CONFIGURAÇÃO JSONBIN
+// ==============================
+const JSONBIN_CONFIG = window.JSONBIN_CONFIG || {
+    BIN_ID: '6989462543b1c97be97049c4',
+    API_KEY: '$2a$10$swTxyIonZHKjAs9AgVv7VOBgh3Qz8ArBujv6z7fWTNtkXvgr/TCZC',
+    UPDATE_INTERVAL: 30000
+};
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+const JSONBIN_LATEST = `https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}/latest`;
+const JSONBIN_UPDATE = `https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.BIN_ID}`;
 
-:root {
-    --ink:        #0f1923;
-    --ink-mid:    #2d3f50;
-    --ink-soft:   #526070;
-    --ink-muted:  #8ea0ae;
-    --ink-faint:  #c8d4db;
-    --paper:      #f0f3f5;
-    --surface:    #ffffff;
-    --surface-2:  #f5f7f9;
-    --accent:     #1a5fa8;
-    --accent-mid: #1e72c8;
-    --accent-soft:#deeaf8;
-    --accent-glow:rgba(26, 95, 168, 0.12);
-    --ok:         #0d7a50;
-    --ok-soft:    #d4f0e6;
-    --warn:       #b45309;
-    --warn-soft:  #fef3c7;
-    --radius-sm:  4px;
-    --radius:     8px;
-    --radius-lg:  12px;
-    --shadow-xs:  0 1px 2px rgba(15,25,35,.06);
-    --shadow-sm:  0 2px 6px rgba(15,25,35,.08);
-    --shadow-md:  0 4px 16px rgba(15,25,35,.10);
-    --t: 180ms ease;
-    --neon-orange: #FF5C00;
-    --neon-orange-light: #fff5f0;
-    --neon-orange-muted: #ffd4c4;
-}
+// ==============================
+// VARIÁVEIS GLOBAIS
+// ==============================
+let sessionTotal = 0;
+let realGlobalTotal = 0;
+let totalCalculations = 0;
+let lastUpdateTime = null;
+let currentCalculatedValue = 0;
+let isOnline = true;
+let updateInterval = null;
+let execucaoEnabled = false;
+let outorgaEnabled = false;
+const EXECUCAO_VALUE = 1116.27;
+const OUTORGA_VALUE = 627.00;
 
-html { scroll-behavior: smooth; }
-
-body {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    line-height: 1.6;
-    min-height: 100vh;
-    padding-bottom: 56px;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* ===== HEADER ===== */
-.app-header {
-    background: var(--ink);
-    padding: 28px 32px 24px;
-    position: relative;
-    overflow: hidden;
-}
-.app-header::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(26,95,168,.22) 0%, transparent 60%);
-    pointer-events: none;
-}
-.header-inner {
-    max-width: 760px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-}
-.app-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #ffffff;
-    letter-spacing: -0.5px;
-    line-height: 1;
-    margin-bottom: 6px;
-}
-.app-title .accent { color: #4d9de0; }
-.app-subtitle {
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: rgba(255,255,255,.5);
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-}
-.header-badge {
-    background: rgba(255,255,255,.07);
-    border: 1px solid rgba(255,255,255,.13);
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
-    font-size: 0.62rem;
-    font-weight: 600;
-    color: rgba(255,255,255,.55);
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    white-space: nowrap;
-    line-height: 1.4;
-    text-align: right;
-}
-
-/* ===== CONTAINER ===== */
-.container {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 24px 20px;
-}
-
-/* ===== OBSERVAÇÃO ===== */
-.observacao {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.78rem;
-    color: var(--ink-soft);
-    background: var(--surface);
-    border: 1px solid var(--ink-faint);
-    border-left: 3px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    margin-bottom: 20px;
-    box-shadow: var(--shadow-xs);
-}
-.observacao::before { content: '📄'; font-size: 0.9rem; flex-shrink: 0; }
-.observacao a { color: var(--accent); text-decoration: none; font-weight: 600; transition: color var(--t); }
-.observacao a:hover { color: var(--accent-mid); text-decoration: underline; }
-
-/* ===== FORM ===== */
-form {
-    background: var(--surface);
-    border: 1px solid var(--ink-faint);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    box-shadow: var(--shadow-sm);
-}
-.form-section { margin-bottom: 20px; }
-.form-field { display: flex; flex-direction: column; gap: 5px; }
-
-select {
-    width: 100%;
-    padding: 11px 36px 11px 14px;
-    border: 1.5px solid var(--ink-faint);
-    border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    color: var(--ink);
-    background: var(--surface);
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238ea0ae' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    transition: border-color var(--t), box-shadow var(--t);
-}
-select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-glow); }
-select option:disabled { color: var(--ink-muted); }
-select option:not(:disabled) { color: var(--ink); }
-
-label {
-    display: block;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--ink-soft);
-    letter-spacing: 0.1px;
-}
-
-input[type="number"] {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1.5px solid var(--ink-faint);
-    border-radius: var(--radius);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--ink);
-    background: var(--surface);
-    transition: border-color var(--t), box-shadow var(--t);
-}
-input[type="number"]:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-glow); }
-input[type="number"]:hover:not(:focus) { border-color: var(--ink-muted); }
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button { opacity: 0.35; }
-
-/* Sub-grupos */
-.form-sub-group {
-    background: var(--surface-2);
-    border: 1px solid var(--ink-faint);
-    border-radius: var(--radius);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-h3 {
-    font-size: 0.73rem;
-    font-weight: 700;
-    color: var(--ink-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-h3::before {
-    content: '';
-    display: inline-block;
-    width: 14px;
-    height: 2px;
-    background: var(--accent);
-    border-radius: 2px;
-    flex-shrink: 0;
-}
-
-/* Divider */
-.form-divider { height: 1px; background: var(--ink-faint); margin: 6px 0 20px; }
-
-/* BUTTON */
-button[type="button"]:not(.copy-btn):not(.execucao-copy-btn):not(.outorga-copy-btn) {
-    width: 100%;
-    padding: 13px 20px;
-    background: var(--ink);
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    border: none;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background var(--t), transform var(--t), box-shadow var(--t);
-    margin-top: 4px;
-}
-button[type="button"]:not(.copy-btn):not(.execucao-copy-btn):not(.outorga-copy-btn):hover {
-    background: var(--accent);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-button[type="button"]:not(.copy-btn):not(.execucao-copy-btn):not(.outorga-copy-btn):active { transform: translateY(0); box-shadow: var(--shadow-xs); }
-
-/* ===== RESULTADO ===== */
-#resultadoContainer {
-    margin-top: 20px;
-    background: var(--surface);
-    border: 1.5px solid var(--accent);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    animation: slideUp 0.35s cubic-bezier(.22,.68,0,1.2);
-}
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(12px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.resultado-header {
-    background: var(--accent);
-    padding: 7px 18px;
-}
-.resultado-header-text {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,.75);
-}
-.resultado-body {
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-#resultado {
-    font-family: 'DM Mono', monospace;
-    font-size: 1.55rem;
-    font-weight: 500;
-    color: var(--ink);
-    margin: 0;
-    letter-spacing: -0.5px;
-}
-.copy-btn {
-    background: transparent;
-    color: var(--ink-soft);
-    border: 1.5px solid var(--ink-faint);
-    border-radius: var(--radius);
-    padding: 7px 13px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all var(--t);
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-.copy-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-.copy-btn svg { fill: currentColor; }
-.copy-feedback {
-    font-size: 0.75rem;
-    margin: 0 18px 12px;
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    display: none;
-    font-weight: 500;
-}
-.copy-feedback.success { background: var(--ok-soft); color: var(--ok); border: 1px solid #a7f3d0; }
-.copy-feedback.error { background: var(--warn-soft); color: var(--warn); border: 1px solid #fde68a; }
-
-/* ===== CHAVES - ALVARÁ DE EXECUÇÃO E OUTORGA ONEROSA ===== */
-.chave-section {
-    background: var(--surface-2);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    border: 1px solid var(--ink-faint);
-    margin-bottom: 20px;
-    transition: all var(--t);
-}
-
-.chave-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.switch-label {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--ink-soft);
-    user-select: none;
-}
-
-.switch-text {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--ink-mid);
-}
-
-.switch-wrapper {
-    position: relative;
-    width: 44px;
-    height: 24px;
-    flex-shrink: 0;
-    transition: all var(--t);
-}
-
-.switch-wrapper input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.switch-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #d1d5db;
-    border-radius: 24px;
-    transition: all var(--t);
-}
-
-.switch-slider::before {
-    content: "";
-    position: absolute;
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background: #ffffff;
-    border-radius: 50%;
-    transition: all var(--t);
-    box-shadow: 0 1px 3px rgba(0,0,0,.15);
-}
-
-.switch-wrapper.active .switch-slider {
-    background: var(--neon-orange);
-    box-shadow: 0 0 0 4px rgba(255, 92, 0, 0.15);
-}
-
-.switch-wrapper.active .switch-slider::before {
-    transform: translateX(20px);
-}
-
-.switch-wrapper:hover .switch-slider {
-    box-shadow: 0 0 0 3px rgba(0,0,0,.05);
-}
-
-.switch-wrapper.active:hover .switch-slider {
-    box-shadow: 0 0 0 4px rgba(255, 92, 0, 0.25);
-}
-
-.switch-hint {
-    font-size: 0.7rem;
-    color: var(--ink-muted);
-    font-weight: 400;
-    letter-spacing: 0.2px;
-}
-
-/* Resultado do Alvará de Execução (laranja neon) */
-#execucaoResultadoContainer {
-    margin-top: 12px;
-    background: var(--neon-orange-light);
-    border: 1.5px solid var(--neon-orange);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    animation: slideUp 0.3s cubic-bezier(.22,.68,0,1.2);
-}
-
-.execucao-header {
-    background: var(--neon-orange);
-    padding: 6px 18px;
-}
-
-.execucao-header .resultado-header-text {
-    color: rgba(255,255,255,.9);
-}
-
-.execucao-body {
-    padding: 10px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.execucao-body #execucaoResultado {
-    font-family: 'DM Mono', monospace;
-    font-size: 1.3rem;
-    font-weight: 500;
-    color: #cc4a00;
-    margin: 0;
-    letter-spacing: -0.3px;
-}
-
-/* Botão de copiar da Execução */
-.execucao-copy-btn {
-    background: transparent;
-    color: #cc4a00;
-    border: 1.5px solid var(--neon-orange-muted);
-    border-radius: var(--radius);
-    padding: 5px 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all var(--t);
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.execucao-copy-btn:hover {
-    background: #ffebe3;
-    border-color: var(--neon-orange);
-    color: #993800;
-}
-
-/* Resultado da Outorga (laranja neon) */
-#outorgaResultadoContainer {
-    margin-top: 12px;
-    background: var(--neon-orange-light);
-    border: 1.5px solid var(--neon-orange);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    animation: slideUp 0.3s cubic-bezier(.22,.68,0,1.2);
-}
-
-.outorga-header {
-    background: var(--neon-orange);
-    padding: 6px 18px;
-}
-
-.outorga-header .resultado-header-text {
-    color: rgba(255,255,255,.9);
-}
-
-.outorga-body {
-    padding: 10px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.outorga-body #outorgaResultado {
-    font-family: 'DM Mono', monospace;
-    font-size: 1.3rem;
-    font-weight: 500;
-    color: #cc4a00;
-    margin: 0;
-    letter-spacing: -0.3px;
-}
-
-/* Botão de copiar da Outorga */
-.outorga-copy-btn {
-    background: transparent;
-    color: #cc4a00;
-    border: 1.5px solid var(--neon-orange-muted);
-    border-radius: var(--radius);
-    padding: 5px 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all var(--t);
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.outorga-copy-btn:hover {
-    background: #ffebe3;
-    border-color: var(--neon-orange);
-    color: #993800;
-}
-
-/* Feedbacks das chaves */
-#execucaoCopyFeedback,
-#outorgaCopyFeedback {
-    font-size: 0.75rem;
-    margin: 0 18px 12px;
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    display: none;
-    font-weight: 500;
-}
-
-#execucaoCopyFeedback.success,
-#outorgaCopyFeedback.success {
-    background: var(--ok-soft);
-    color: var(--ok);
-    border: 1px solid #a7f3d0;
-}
-
-#execucaoCopyFeedback.error,
-#outorgaCopyFeedback.error {
-    background: var(--warn-soft);
-    color: var(--warn);
-    border: 1px solid #fde68a;
-}
-
-/* Indicador visual no resultado principal quando chaves estão ativas */
-#resultadoContainer.has-execucao {
-    border-color: var(--neon-orange);
-}
-
-#resultadoContainer.has-outorga {
-    border-color: var(--neon-orange);
-}
-
-#resultadoContainer.has-execucao .resultado-header {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--neon-orange) 100%);
-}
-
-#resultadoContainer.has-outorga .resultado-header {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--neon-orange) 100%);
-}
-
-/* ===== DEFAULT HIDDEN ===== */
-#areaConstruidaContainer { display: none; }
-
-/* ===== FOOTER ===== */
-footer {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: var(--ink);
-    color: rgba(255,255,255,.3);
-    padding: 0 20px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    font-size: 0.6rem;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border-top: 1px solid rgba(255,255,255,.05);
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 640px) {
-    .app-header { padding: 20px 16px; }
-    .header-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .header-badge { align-self: flex-start; }
-    .container { padding: 16px; }
-    form { padding: 18px 16px; }
-    #resultado { font-size: 1.25rem; }
-    .resultado-body { flex-direction: column; align-items: stretch; }
-    .copy-btn { justify-content: center; }
+// ==============================
+// INICIALIZAÇÃO
+// ==============================
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            calculate();
+        }
+    });
     
-    .chave-toggle {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+    initializeApp();
+});
+
+async function initializeApp() {
+    console.log('🚀 Inicializando AD Calc com JSONBin...');
+    loadSessionCounter();
+    await loadRealGlobalCounter();
+    startPolling();
+    setupConnectionIndicator();
+    console.log('✅ AD Calc inicializado com sucesso!');
+}
+
+// ==============================
+// CONTADOR DA SESSÃO (LOCAL)
+// ==============================
+function loadSessionCounter() {
+    const today = new Date().toDateString();
+    const savedDate = localStorage.getItem('adcalc_session_date');
+    
+    if (savedDate === today) {
+        sessionTotal = parseFloat(localStorage.getItem('adcalc_session_total')) || 0;
+    } else {
+        sessionTotal = 0;
+        localStorage.setItem('adcalc_session_total', '0');
+        localStorage.setItem('adcalc_session_date', today);
     }
     
-    .switch-hint {
-        font-size: 0.65rem;
-    }
-    
-    .execucao-body,
-    .outorga-body {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    
-    .execucao-body #execucaoResultado,
-    .outorga-body #outorgaResultado {
-        font-size: 1.1rem;
-    }
-    
-    .execucao-copy-btn,
-    .outorga-copy-btn {
-        justify-content: center;
-        width: 100%;
+    updateSessionCounter();
+}
+
+function updateSessionCounter() {
+    const sessionCounter = document.getElementById('sessionCounter');
+    if (sessionCounter) {
+        sessionCounter.textContent = formatCurrency(sessionTotal);
     }
 }
 
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--ink-muted); }
+// ==============================
+// CONTADOR GLOBAL REAL (JSONBIN)
+// ==============================
+async function loadRealGlobalCounter() {
+    try {
+        console.log('📡 Buscando total global do JSONBin...');
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(JSONBIN_LATEST, {
+            headers: {
+                'X-Access-Key': JSONBIN_CONFIG.API_KEY,
+                'X-Bin-Meta': 'false'
+            },
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        
+        if (data && typeof data.total !== 'undefined') {
+            realGlobalTotal = parseFloat(data.total) || 0;
+            totalCalculations = parseInt(data.count) || 0;
+            lastUpdateTime = data.lastUpdated || new Date().toISOString();
+            
+            updateGlobalCounterDisplay();
+            
+            localStorage.setItem('adcalc_real_global', realGlobalTotal.toString());
+            localStorage.setItem('adcalc_last_update', lastUpdateTime);
+            
+            isOnline = true;
+            updateConnectionStatus(true);
+            
+            console.log(`✅ Total global: ${formatCurrency(realGlobalTotal)}`);
+            
+        } else {
+            console.log('⚠️ Inicializando bin...');
+            await initializeBin();
+            await loadRealGlobalCounter();
+        }
+        
+    } catch (error) {
+        console.warn('⚠️ Usando cache local:', error.message);
+        
+        const cachedTotal = localStorage.getItem('adcalc_real_global');
+        const cachedUpdate = localStorage.getItem('adcalc_last_update');
+        
+        if (cachedTotal) {
+            realGlobalTotal = parseFloat(cachedTotal);
+            lastUpdateTime = cachedUpdate;
+            updateGlobalCounterDisplay();
+        }
+        
+        isOnline = false;
+        updateConnectionStatus(false);
+    }
+}
+
+async function initializeBin() {
+    try {
+        const initialData = {
+            total: 0,
+            count: 0,
+            lastUpdated: new Date().toISOString(),
+            created: new Date().toISOString(),
+            description: "AD Calc - Total de cálculos dos usuários",
+            version: "1.0"
+        };
+        
+        const response = await fetch(JSONBIN_UPDATE, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Access-Key': JSONBIN_CONFIG.API_KEY
+            },
+            body: JSON.stringify(initialData)
+        });
+        
+        if (response.ok) {
+            console.log('✅ Bin inicializado!');
+            return true;
+        }
+        
+        throw new Error('Falha na inicialização');
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar bin:', error);
+        return false;
+    }
+}
+
+async function addToRealGlobalCounter(value) {
+    if (!value || isNaN(value) || value <= 0) return false;
+    
+    try {
+        console.log(`🔄 Adicionando ${formatCurrency(value)} ao total global...`);
+        
+        const response = await fetch(JSONBIN_LATEST, {
+            headers: {
+                'X-Access-Key': JSONBIN_CONFIG.API_KEY,
+                'X-Bin-Meta': 'false'
+            }
+        });
+        
+        if (!response.ok) throw new Error('Falha ao buscar dados');
+        
+        const currentData = await response.json();
+        const currentTotal = parseFloat(currentData.total) || 0;
+        const currentCount = parseInt(currentData.count) || 0;
+        
+        const newTotal = currentTotal + value;
+        const newCount = currentCount + 1;
+        
+        console.log(`📊 Novo total: ${formatCurrency(currentTotal)} + ${formatCurrency(value)} = ${formatCurrency(newTotal)}`);
+        console.log(`📊 Total de cálculos: ${currentCount} → ${newCount}`);
+        
+        const updateData = {
+            total: newTotal,
+            count: newCount,
+            lastUpdated: new Date().toISOString(),
+            lastCalculation: value,
+            lastCalculationValue: value,
+            description: "AD Calc - Total de cálculos dos usuários"
+        };
+        
+        const updateResponse = await fetch(JSONBIN_UPDATE, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Access-Key': JSONBIN_CONFIG.API_KEY,
+                'X-Bin-Versioning': 'false'
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        if (updateResponse.ok) {
+            realGlobalTotal = newTotal;
+            totalCalculations = newCount;
+            lastUpdateTime = updateData.lastUpdated;
+            
+            updateGlobalCounterDisplay();
+            animateGlobalCounter();
+            animateGlobalStats();
+            
+            localStorage.setItem('adcalc_real_global', newTotal.toString());
+            localStorage.setItem('adcalc_total_calculations', newCount.toString());
+            localStorage.setItem('adcalc_last_update', lastUpdateTime);
+            
+            console.log(`✅ Total global atualizado: ${formatCurrency(newTotal)} (${newCount} cálculos)`);
+            
+            return true;
+        } else {
+            throw new Error('Falha na atualização');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar:', error);
+        savePendingUpdate(value);
+        isOnline = false;
+        updateConnectionStatus(false);
+        return false;
+    }
+}
+
+// ==============================
+// FUNÇÕES DE ATUALIZAÇÃO E DISPLAY
+// ==============================
+function updateGlobalCounterDisplay() {
+    const globalCounter = document.getElementById('globalCounter');
+    const globalStats = document.getElementById('globalStats');
+    const globalCount = document.getElementById('globalCount');
+    const lastUpdateElement = document.getElementById('lastUpdate');
+    
+    if (globalCounter) {
+        globalCounter.textContent = formatCurrency(realGlobalTotal);
+        
+        if (globalCount) {
+            globalCount.textContent = totalCalculations.toLocaleString('pt-BR');
+        }
+        
+        let tooltip = `💰 Total acumulado: ${formatCurrency(realGlobalTotal)}`;
+        if (totalCalculations > 0) {
+            tooltip += `\n🧮 ${totalCalculations.toLocaleString('pt-BR')} cálculo${totalCalculations !== 1 ? 's' : ''}`;
+            const avg = realGlobalTotal / totalCalculations;
+            tooltip += `\n📊 Média por cálculo: ${formatCurrency(avg)}`;
+        }
+        if (lastUpdateTime) {
+            const updateDate = new Date(lastUpdateTime);
+            tooltip += `\n🕐 Última atualização: ${updateDate.toLocaleString('pt-BR')}`;
+        }
+        tooltip += `\n📡 Status: ${isOnline ? 'Online ✅' : 'Offline ⚠️'}`;
+        globalCounter.title = tooltip;
+    }
+    
+    if (lastUpdateElement && lastUpdateTime) {
+        const updateDate = new Date(lastUpdateTime);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - updateDate) / (1000 * 60));
+        
+        if (diffMinutes < 1) {
+            lastUpdateElement.textContent = 'Agora mesmo';
+        } else if (diffMinutes < 60) {
+            lastUpdateElement.textContent = `há ${diffMinutes} min`;
+        } else {
+            lastUpdateElement.textContent = `há ${Math.floor(diffMinutes/60)}h`;
+        }
+        
+        lastUpdateElement.title = `Última sincronização: ${updateDate.toLocaleString('pt-BR')}`;
+    }
+}
+
+function animateGlobalCounter() {
+    const globalCounter = document.getElementById('globalCounter');
+    if (globalCounter) {
+        globalCounter.classList.add('updated');
+        setTimeout(() => globalCounter.classList.remove('updated'), 1000);
+    }
+}
+
+// ==============================
+// POLLING E CONEXÃO
+// ==============================
+function startPolling() {
+    if (updateInterval) clearInterval(updateInterval);
+    
+    updateInterval = setInterval(async () => {
+        await loadRealGlobalCounter();
+    }, JSONBIN_CONFIG.UPDATE_INTERVAL);
+    
+    console.log(`🔄 Polling iniciado (${JSONBIN_CONFIG.UPDATE_INTERVAL/1000}s)`);
+}
+
+function setupConnectionIndicator() {
+    setInterval(() => {
+        checkConnection();
+    }, 10000);
+}
+
+function checkConnection() {
+    fetch('https://api.jsonbin.io/', { 
+        method: 'HEAD',
+        mode: 'no-cors'
+    }).then(() => {
+        if (!isOnline) {
+            isOnline = true;
+            updateConnectionStatus(true);
+            console.log('🌐 Conexão restaurada');
+            syncPendingUpdates();
+        }
+    }).catch(() => {
+        if (isOnline) {
+            isOnline = false;
+            updateConnectionStatus(false);
+            console.warn('⚠️ Conexão perdida');
+        }
+    });
+}
+
+function updateConnectionStatus(online) {
+    isOnline = online;
+    const globalCounter = document.getElementById('globalCounter');
+    
+    if (globalCounter) {
+        if (online) {
+            globalCounter.style.opacity = '1';
+            globalCounter.style.color = '';
+        } else {
+            globalCounter.style.opacity = '0.8';
+            globalCounter.style.color = '#f59e0b';
+        }
+    }
+}
+
+// ==============================
+// FUNÇÕES UTILITÁRIAS
+// ==============================
+function formatCurrency(value) {
+    return 'R$ ' + value.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function formatCurrencyForCopy(value) {
+    return value.toFixed(2);
+}
+
+function savePendingUpdate(value) {
+    const pendingUpdates = JSON.parse(localStorage.getItem('adcalc_pending_updates') || '[]');
+    pendingUpdates.push({
+        value: value,
+        timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('adcalc_pending_updates', JSON.stringify(pendingUpdates));
+    console.log(`💾 Salvo localmente: ${formatCurrency(value)}`);
+}
+
+async function syncPendingUpdates() {
+    if (!isOnline) return;
+    
+    const pendingUpdates = JSON.parse(localStorage.getItem('adcalc_pending_updates') || '[]');
+    if (pendingUpdates.length === 0) return;
+    
+    console.log(`🔄 Sincronizando ${pendingUpdates.length} pendências...`);
+    
+    for (const update of pendingUpdates) {
+        const success = await addToRealGlobalCounter(update.value);
+        if (success) {
+            const index = pendingUpdates.indexOf(update);
+            if (index > -1) pendingUpdates.splice(index, 1);
+        }
+    }
+    
+    localStorage.setItem('adcalc_pending_updates', JSON.stringify(pendingUpdates));
+}
+
+// ==============================
+// FEEDBACK GENÉRICO
+// ==============================
+function showFeedback(element, message, type) {
+    if (!element) return;
+    
+    element.textContent = message;
+    element.className = 'copy-feedback ' + type;
+    element.style.display = 'block';
+    
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 3000);
+}
+
+// ==============================
+// ALVARÁ DE EXECUÇÃO
+// ==============================
+function toggleExecucao() {
+    const toggle = document.getElementById('execucaoToggle');
+    const execucaoContainer = document.getElementById('execucaoResultadoContainer');
+    const resultadoContainer = document.getElementById('resultadoContainer');
+    
+    execucaoEnabled = toggle.checked;
+    
+    const switchWrapper = toggle.closest('.switch-wrapper');
+    if (execucaoEnabled) {
+        switchWrapper.classList.add('active');
+        if (resultadoContainer.style.display !== 'none') {
+            execucaoContainer.style.display = 'block';
+            execucaoContainer.style.animation = 'fadeIn 0.3s ease-out';
+            resultadoContainer.classList.add('has-execucao');
+        }
+    } else {
+        switchWrapper.classList.remove('active');
+        execucaoContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-execucao');
+    }
+}
+
+function copyExecucaoResult() {
+    const valueToCopy = EXECUCAO_VALUE.toFixed(2);
+    const feedbackElement = document.getElementById('execucaoCopyFeedback');
+    
+    navigator.clipboard.writeText(valueToCopy)
+        .then(() => {
+            showFeedback(feedbackElement, 'Valor do Alvará de Execução copiado!', 'success');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar:', err);
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = valueToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showFeedback(feedbackElement, 'Valor do Alvará de Execução copiado!', 'success');
+            } catch (fallbackErr) {
+                showFeedback(feedbackElement, 'Erro ao copiar', 'error');
+            }
+        });
+}
+
+// ==============================
+// OUTORGA ONEROSA
+// ==============================
+function toggleOutorga() {
+    const toggle = document.getElementById('outorgaToggle');
+    const outorgaContainer = document.getElementById('outorgaResultadoContainer');
+    const resultadoContainer = document.getElementById('resultadoContainer');
+    
+    outorgaEnabled = toggle.checked;
+    
+    const switchWrapper = toggle.closest('.switch-wrapper');
+    if (outorgaEnabled) {
+        switchWrapper.classList.add('active');
+        if (resultadoContainer.style.display !== 'none') {
+            outorgaContainer.style.display = 'block';
+            outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
+            resultadoContainer.classList.add('has-outorga');
+        }
+    } else {
+        switchWrapper.classList.remove('active');
+        outorgaContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-outorga');
+    }
+}
+
+function copyOutorgaResult() {
+    const valueToCopy = OUTORGA_VALUE.toFixed(2);
+    const feedbackElement = document.getElementById('outorgaCopyFeedback');
+    
+    navigator.clipboard.writeText(valueToCopy)
+        .then(() => {
+            showFeedback(feedbackElement, 'Valor da Outorga copiado!', 'success');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar:', err);
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = valueToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showFeedback(feedbackElement, 'Valor da Outorga copiado!', 'success');
+            } catch (fallbackErr) {
+                showFeedback(feedbackElement, 'Erro ao copiar', 'error');
+            }
+        });
+}
+
+// ==============================
+// COPIAR RESULTADO PRINCIPAL
+// ==============================
+function copyResult() {
+    if (!currentCalculatedValue || currentCalculatedValue <= 0) {
+        showCopyFeedback('Nenhum valor para copiar', 'error');
+        return;
+    }
+    
+    const valueToCopy = formatCurrencyForCopy(currentCalculatedValue);
+    
+    navigator.clipboard.writeText(valueToCopy)
+        .then(() => {
+            showCopyFeedback('Valor copiado!', 'success');
+            console.log('📋 Copiado:', valueToCopy);
+        })
+        .catch(err => {
+            console.error('Erro ao copiar:', err);
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = valueToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyFeedback('Valor copiado!', 'success');
+            } catch (fallbackErr) {
+                showCopyFeedback('Erro ao copiar', 'error');
+            }
+        });
+}
+
+function showCopyFeedback(message, type) {
+    const feedbackElement = document.getElementById('copyFeedback');
+    if (!feedbackElement) return;
+    
+    feedbackElement.textContent = message;
+    feedbackElement.className = 'copy-feedback ' + type;
+    feedbackElement.style.display = 'block';
+    
+    setTimeout(() => {
+        feedbackElement.style.display = 'none';
+    }, 3000);
+}
+
+// ==============================
+// ATUALIZAR CONTADORES
+// ==============================
+function updateCounters(value) {
+    if (!value || isNaN(value) || value <= 0) return;
+    
+    sessionTotal += value;
+    localStorage.setItem('adcalc_session_total', sessionTotal.toString());
+    updateSessionCounter();
+    
+    addToRealGlobalCounter(value);
+    
+    const sessionCounter = document.getElementById('sessionCounter');
+    if (sessionCounter) {
+        sessionCounter.classList.add('updated');
+        setTimeout(() => sessionCounter.classList.remove('updated'), 300);
+    }
+}
+
+// ==============================
+// FUNÇÕES ORIGINAIS DO SIMULADOR
+// ==============================
+function changeLabel() {
+    document.getElementById('area').value = '';
+    document.getElementById('areaConstruida').value = '';
+    document.getElementById('quantidadeUnidades').value = '1';
+    document.getElementById('areaTotalUso').value = '';
+    document.getElementById('areaTotalReformar').value = '';
+    document.getElementById('areaTotalRegularizar').value = '';
+    document.getElementById('areaTotalConstruir').value = '';
+    document.getElementById('areaConstruirAprovado').value = '';
+    document.getElementById('areaReformarAprovado').value = '';
+    document.getElementById('areaRegularizarAprovado').value = '';
+    document.getElementById('areaTotalAprovado').value = '';
+    document.getElementById('areaConstruirModificativo').value = '';
+    document.getElementById('areaReformarModificativo').value = '';
+    document.getElementById('areaRegularizarModificativo').value = '';
+    document.getElementById('areaTotalModificativo').value = '';
+    
+    document.getElementById('resultadoContainer').style.display = 'none';
+    document.getElementById('resultado').textContent = '';
+    document.getElementById('copyFeedback').style.display = 'none';
+    document.getElementById('execucaoResultadoContainer').style.display = 'none';
+    document.getElementById('outorgaResultadoContainer').style.display = 'none';
+    document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
+    
+    var assunto = document.getElementById('assunto').value;
+    var areaLabel = document.getElementById('areaLabel');
+    var areaStandardContainer = document.getElementById('areaStandardContainer');
+    var areaConstruidaContainer = document.getElementById('areaConstruidaContainer');
+    var reformaContainer = document.getElementById('reformaContainer');
+    var quantidadeUnidadesContainer = document.getElementById('quantidadeUnidadesContainer');
+    var projetoModificativoContainer = document.getElementById('projetoModificativoReformaContainer');
+
+    areaStandardContainer.style.display = 'none';
+    areaConstruidaContainer.style.display = 'none';
+    reformaContainer.style.display = 'none';
+    quantidadeUnidadesContainer.style.display = 'none';
+    projetoModificativoContainer.style.display = 'none';
+
+    switch (assunto) {
+        case 'reforma':
+            reformaContainer.style.display = 'block';
+            break;
+
+        case 'projeto_modificativo_edificacao':
+            areaConstruidaContainer.style.display = 'block';
+            areaStandardContainer.style.display = 'block';
+            document.querySelector('#areaConstruidaContainer label').textContent = 'Área total construída no alvará (m²):';
+            areaLabel.textContent = 'Área total na planta do Projeto Modificativo (m²):';
+            break;
+            
+        case 'projeto_modificativo_reforma':
+            projetoModificativoContainer.style.display = 'block';
+            break;
+
+        case 'edificacao_nova':
+            areaStandardContainer.style.display = 'block';
+            areaLabel.textContent = 'Área a construir (m²):';
+            break;
+
+        case 'revalidacao':
+            areaStandardContainer.style.display = 'block';
+            areaLabel.textContent = 'Área total construída no alvará a ser revalidado (m²):';
+            break;
+        
+        case 'avanco_grua':
+        case 'tapume':
+            areaStandardContainer.style.display = 'block';
+            quantidadeUnidadesContainer.style.display = 'block';
+            areaLabel.textContent = 'Informe a área construída em m²:';
+            break;
+
+        case 'tanques_bombas':
+            areaStandardContainer.style.display = 'block';
+            areaLabel.textContent = 'Informe a quantidade de equipamentos:';
+            break;
+
+        case 'acessibilidade':
+        case 'sistema_seguranca':
+        case 'certificado_seguranca':
+            areaStandardContainer.style.display = 'block';
+            areaConstruidaContainer.style.display = 'block';
+            areaLabel.textContent = 'Área objeto do pedido (m²):';
+            document.querySelector('#areaConstruidaContainer label').textContent = 'Área total construída (m²):';
+            break;
+
+        default:
+            areaStandardContainer.style.display = 'block';
+            areaLabel.textContent = 'Área objeto do pedido (m²):';
+            break;
+    }
+    
+    // Controle do Alvará de Execução
+    const execucaoContainer = document.getElementById('execucaoContainer');
+    const execucaoResultadoContainer = document.getElementById('execucaoResultadoContainer');
+    const assuntosComExecucao = [
+        'edificacao_nova',
+        'reforma'
+    ];
+    
+    if (assuntosComExecucao.includes(assunto)) {
+        execucaoContainer.style.display = 'block';
+        const toggle = document.getElementById('execucaoToggle');
+        if (toggle) {
+            toggle.checked = false;
+            execucaoEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
+        execucaoResultadoContainer.style.display = 'none';
+    } else {
+        execucaoContainer.style.display = 'none';
+        execucaoResultadoContainer.style.display = 'none';
+        const toggle = document.getElementById('execucaoToggle');
+        if (toggle) {
+            toggle.checked = false;
+            execucaoEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
+    }
+    
+    // Controle da Outorga
+    const outorgaContainer = document.getElementById('outorgaContainer');
+    const outorgaResultadoContainer = document.getElementById('outorgaResultadoContainer');
+    const assuntosComOutorga = [
+        'edificacao_nova',
+        'reforma',
+        'projeto_modificativo_edificacao',
+        'projeto_modificativo_reforma'
+    ];
+    
+    if (assuntosComOutorga.includes(assunto)) {
+        outorgaContainer.style.display = 'block';
+        const toggle = document.getElementById('outorgaToggle');
+        if (toggle) {
+            toggle.checked = false;
+            outorgaEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
+        outorgaResultadoContainer.style.display = 'none';
+    } else {
+        outorgaContainer.style.display = 'none';
+        outorgaResultadoContainer.style.display = 'none';
+        const toggle = document.getElementById('outorgaToggle');
+        if (toggle) {
+            toggle.checked = false;
+            outorgaEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
+    }
+    
+    document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
+}
+
+function calculate() {
+    var assunto = document.getElementById('assunto').value;
+
+    if (!assunto) {
+        alert("Por favor, selecione uma opção válida.");
+        return;
+    }
+
+    var resultado = document.getElementById('resultado');
+    var resultadoContainer = document.getElementById('resultadoContainer');
+    var copyFeedback = document.getElementById('copyFeedback');
+    var valor;
+
+    function validateRequired(value, fieldName) {
+        if (value === '' || isNaN(parseFloat(value))) {
+            alert("Por favor, informe " + fieldName);
+            return false;
+        }
+        return true;
+    }
+
+    function parseOptional(value) {
+        return value === '' ? 0 : parseFloat(value);
+    }
+
+    switch (assunto) {
+        case 'edificacao_nova':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área a construir')) return;
+            area = parseFloat(area);
+            
+            if (area <= 1500) {
+                valor = area * 6.97;
+            } else if (area <= 20000) {
+                valor = area * 9.31;
+            } else {
+                valor = area * 12.41;
+            }
+            break;
+
+        case 'reforma':
+            var areaTotalUso = document.getElementById('areaTotalUso').value;
+            var areaTotalReformar = document.getElementById('areaTotalReformar').value;
+            var areaTotalRegularizar = document.getElementById('areaTotalRegularizar').value;
+            var areaTotalConstruir = document.getElementById('areaTotalConstruir').value;
+            
+            if (!validateRequired(areaTotalUso, 'a Área Total referente ao uso indicado')) return;
+            
+            areaTotalUso = parseFloat(areaTotalUso);
+            areaTotalReformar = parseOptional(areaTotalReformar);
+            areaTotalRegularizar = parseOptional(areaTotalRegularizar);
+            areaTotalConstruir = parseOptional(areaTotalConstruir);
+            
+            if (areaTotalUso <= 1500) {
+                valor = (areaTotalReformar * 6.97) + (areaTotalRegularizar * 6.19) + (areaTotalConstruir * 6.97);
+            } else if (areaTotalUso <= 20000) {
+                valor = (areaTotalReformar * 9.31) + (areaTotalRegularizar * 9.31) + (areaTotalConstruir * 9.31);
+            } else {
+                valor = (areaTotalReformar * 12.41) + (areaTotalRegularizar * 12.41) + (areaTotalConstruir * 12.41);
+            }
+            break;
+
+        case 'revalidacao':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área total construída')) return;
+            area = parseFloat(area);
+            valor = area * 3.11;
+            break;
+        
+        case 'projeto_modificativo_edificacao':
+            var area = document.getElementById('area').value;
+            var areaConstruida = document.getElementById('areaConstruida').value;
+            
+            if (!validateRequired(area, 'a área total na planta do Projeto Modificativo')) return;
+            if (!validateRequired(areaConstruida, 'a área total construída no alvará')) return;
+            
+            area = parseFloat(area);
+            areaConstruida = parseFloat(areaConstruida);
+            
+            if (area <= 1500) {
+              if (area <= areaConstruida) {
+                valor = area * 3.89;
+              } else {
+                valor = (area - areaConstruida) * 6.97 + (areaConstruida * 3.89);
+              }
+            } else if (area <= 20000) {
+                if (area <= areaConstruida) {
+                valor = area * 4.66;
+              } else {
+                valor = (area - areaConstruida) * 9.31 + (areaConstruida * 4.66);
+              }
+            } else {
+                if (area <= areaConstruida) {
+                valor = area * 6.19;
+              } else {
+                valor = (area - areaConstruida) * 12.41 + (areaConstruida * 6.19);
+              }
+            }
+            break;
+
+        case 'projeto_modificativo_reforma':
+            var areaConstruirAprovado = document.getElementById('areaConstruirAprovado').value;
+            var areaReformarAprovado = document.getElementById('areaReformarAprovado').value;
+            var areaTotalAprovado = document.getElementById('areaTotalAprovado').value;
+            var areaConstruirModificativo = document.getElementById('areaConstruirModificativo').value;
+            var areaReformarModificativo = document.getElementById('areaReformarModificativo').value;
+            var areaTotalModificativo = document.getElementById('areaTotalModificativo').value;
+            
+            if (!validateRequired(areaConstruirAprovado, 'a área a construir do projeto aprovado')) return;
+            if (!validateRequired(areaReformarAprovado, 'a área a reformar do projeto aprovado')) return;
+            if (!validateRequired(areaTotalAprovado, 'a área total do projeto aprovado')) return;
+            if (!validateRequired(areaConstruirModificativo, 'a área a construir do projeto modificativo')) return;
+            if (!validateRequired(areaReformarModificativo, 'a área a reformar do projeto modificativo')) return;
+            if (!validateRequired(areaTotalModificativo, 'a área total do projeto modificativo')) return;
+            
+            areaConstruirAprovado = parseFloat(areaConstruirAprovado);
+            areaReformarAprovado = parseFloat(areaReformarAprovado);
+            areaTotalAprovado = parseFloat(areaTotalAprovado);
+            areaConstruirModificativo = parseFloat(areaConstruirModificativo);
+            areaReformarModificativo = parseFloat(areaReformarModificativo);
+            areaTotalModificativo = parseFloat(areaTotalModificativo);
+            
+            var areaRegularizarAprovado = parseOptional(document.getElementById('areaRegularizarAprovado').value);
+            var areaRegularizarModificativo = parseOptional(document.getElementById('areaRegularizarModificativo').value);
+            
+            var diferencaConstruir = Math.max(0, areaConstruirModificativo - areaConstruirAprovado);
+            var diferencaReformar = Math.max(0, areaReformarModificativo - areaReformarAprovado);
+            var diferencaRegularizar = Math.max(0, areaRegularizarModificativo - areaRegularizarAprovado);
+            var areaModificada;
+            
+            if (areaTotalModificativo <= areaTotalAprovado){
+                areaModificada = areaTotalAprovado - areaTotalModificativo;
+            } else {
+                areaModificada = areaTotalModificativo - areaTotalAprovado;
+            }
+            
+            if (areaTotalModificativo <= 1500) {
+                areaModificada = areaModificada * 1.55;
+                diferencaConstruir = diferencaConstruir * 6.97;
+                diferencaReformar = diferencaReformar * 6.97;
+                diferencaRegularizar = diferencaRegularizar * 6.19;
+            } else if (areaTotalModificativo <= 20000){
+                areaModificada = areaModificada * 3.11;
+                diferencaConstruir = diferencaConstruir * 9.31;
+                diferencaReformar = diferencaReformar * 9.31;
+                diferencaRegularizar = diferencaRegularizar * 9.31;
+            } else {
+                areaModificada = areaModificada * 4.66;
+                diferencaConstruir = diferencaConstruir * 12.41;
+                diferencaReformar = diferencaReformar * 12.41;
+                diferencaRegularizar = diferencaRegularizar * 12.41;
+            }
+
+            valor = (areaModificada + diferencaConstruir + diferencaReformar + diferencaRegularizar);
+            break;
+
+        case 'avanco_grua':
+        case 'tapume':
+            var area = parseFloat(document.getElementById('area').value);
+            var quantidadeUnidades = parseFloat(document.getElementById('quantidadeUnidades').value);
+            
+            if (area <= 1500) {
+                valor = 1085.23 * quantidadeUnidades;
+            } else if (area > 1500) {
+                valor = 2170.51 * quantidadeUnidades;
+            } else {
+                valor = 0;
+            }
+            break;
+
+        case 'alvara_heliponto':
+            valor = 2260.00;
+            break;
+
+        case 'execucao_erb':
+            valor = 250.00;
+            break;
+
+        case 'estande_vendas':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área')) return;
+            area = parseFloat(area);
+            valor = area * 3.11;
+            break;
+
+        case 'acessibilidade':
+            var area = document.getElementById('area').value;
+            var areaConstruida = document.getElementById('areaConstruida').value;
+            
+            if (!validateRequired(area, 'a área objeto do pedido')) return;
+            if (!validateRequired(areaConstruida, 'a área total construída')) return;
+            
+            area = parseFloat(area);
+            areaConstruida = parseFloat(areaConstruida);
+            
+            if (areaConstruida <= 1500) {
+                valor = area * 3.11;
+            } else if (areaConstruida <= 20000) {
+                valor = area * 4.66;
+            } else if (areaConstruida > 20000) {
+                valor = area * 6.19;
+            } else {
+                valor = 0;
+            }
+            break;
+
+        case 'reuniao':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área')) return;
+            area = parseFloat(area);
+            valor = area * 3.25;
+            break;
+
+        case 'sistema_seguranca':
+        case 'certificado_seguranca':
+            var area = document.getElementById('area').value;
+            var areaConstruida = document.getElementById('areaConstruida').value;
+            
+            if (!validateRequired(area, 'a área objeto do pedido')) return;
+            if (!validateRequired(areaConstruida, 'a área total construída')) return;
+            
+            area = parseFloat(area);
+            areaConstruida = parseFloat(areaConstruida);
+            
+            if (areaConstruida <= 20000) {
+                valor = area * 3.11;
+            } else {
+                valor = area * 6.19;
+            }
+            break;
+
+        case 'certificado_manutencao':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área')) return;
+            area = parseFloat(area);
+            valor = area * 1.90;
+            break;
+
+        case 'tanques_bombas':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a quantidade de equipamentos')) return;
+            area = parseFloat(area);
+            valor = area * 232.56;
+            break;
+
+        case 'desmembramento_remembramento':
+        case 'diretrizes_urbanisticas':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área')) return;
+            area = parseFloat(area);
+            valor = area * 0.35;
+            break;
+
+        case 'reparcelamento':
+            var area = document.getElementById('area').value;
+            if (!validateRequired(area, 'a área')) return;
+            area = parseFloat(area);
+            valor = area * 0.30;
+            break;
+
+        case 'execucao':
+            valor = 1116.27;
+            break;
+
+        default:
+            valor = 0;
+    }
+
+    valor = Math.round(valor * 100) / 100;
+    currentCalculatedValue = valor;
+    
+    // Verificar se as chaves estão ativas
+    const execucaoEnabled_local = document.getElementById('execucaoToggle')?.checked || false;
+    const outorgaEnabled_local = document.getElementById('outorgaToggle')?.checked || false;
+    const execucaoContainer = document.getElementById('execucaoResultadoContainer');
+    const outorgaContainer = document.getElementById('outorgaResultadoContainer');
+    
+    // Exibir resultado base
+    resultado.textContent = formatCurrency(valor);
+    resultadoContainer.style.display = 'block';
+    copyFeedback.style.display = 'none';
+    
+    // Mostrar ou ocultar Alvará de Execução separadamente
+    if (execucaoEnabled_local) {
+        execucaoContainer.style.display = 'block';
+        execucaoContainer.style.animation = 'fadeIn 0.3s ease-out';
+        resultadoContainer.classList.add('has-execucao');
+    } else {
+        execucaoContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-execucao');
+    }
+    
+    // Mostrar ou ocultar Outorga separadamente
+    if (outorgaEnabled_local) {
+        outorgaContainer.style.display = 'block';
+        outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
+        resultadoContainer.classList.add('has-outorga');
+    } else {
+        outorgaContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-outorga');
+    }
+    
+    resultadoContainer.style.animation = 'none';
+    setTimeout(() => {
+        resultadoContainer.style.animation = 'fadeIn 0.5s ease-out';
+    }, 10);
+    
+    updateCounters(valor);
+    syncPendingUpdates();
+    
+    resultadoContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ==============================
+// ANIMAÇÃO DAS ESTATÍSTICAS
+// ==============================
+function animateGlobalStats() {
+    const globalStats = document.getElementById('globalStats');
+    const globalCount = document.getElementById('globalCount');
+    
+    if (globalStats) {
+        globalStats.classList.add('updated');
+        setTimeout(() => {
+            globalStats.classList.remove('updated');
+        }, 500);
+    }
+    
+    if (globalCount) {
+        globalCount.style.transform = 'scale(1.2)';
+        globalCount.style.color = '#3b82f6';
+        setTimeout(() => {
+            globalCount.style.transform = 'scale(1)';
+            globalCount.style.color = '';
+        }, 500);
+    }
+}
