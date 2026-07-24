@@ -20,7 +20,9 @@ let lastUpdateTime = null;
 let currentCalculatedValue = 0;
 let isOnline = true;
 let updateInterval = null;
+let execucaoEnabled = false;
 let outorgaEnabled = false;
+const EXECUCAO_VALUE = 1116.27;
 const OUTORGA_VALUE = 627.00;
 
 // ==============================
@@ -359,7 +361,7 @@ function formatCurrency(value) {
 }
 
 function formatCurrencyForCopy(value) {
-    return value.toFixed(2).replace('.', '.');
+    return value.toFixed(2);
 }
 
 function savePendingUpdate(value) {
@@ -392,6 +394,70 @@ async function syncPendingUpdates() {
 }
 
 // ==============================
+// FEEDBACK GENÉRICO
+// ==============================
+function showFeedback(element, message, type) {
+    if (!element) return;
+    
+    element.textContent = message;
+    element.className = 'copy-feedback ' + type;
+    element.style.display = 'block';
+    
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 3000);
+}
+
+// ==============================
+// ALVARÁ DE EXECUÇÃO
+// ==============================
+function toggleExecucao() {
+    const toggle = document.getElementById('execucaoToggle');
+    const execucaoContainer = document.getElementById('execucaoResultadoContainer');
+    const resultadoContainer = document.getElementById('resultadoContainer');
+    
+    execucaoEnabled = toggle.checked;
+    
+    const switchWrapper = toggle.closest('.switch-wrapper');
+    if (execucaoEnabled) {
+        switchWrapper.classList.add('active');
+        if (resultadoContainer.style.display !== 'none') {
+            execucaoContainer.style.display = 'block';
+            execucaoContainer.style.animation = 'fadeIn 0.3s ease-out';
+            resultadoContainer.classList.add('has-execucao');
+        }
+    } else {
+        switchWrapper.classList.remove('active');
+        execucaoContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-execucao');
+    }
+}
+
+function copyExecucaoResult() {
+    const valueToCopy = EXECUCAO_VALUE.toFixed(2);
+    const feedbackElement = document.getElementById('execucaoCopyFeedback');
+    
+    navigator.clipboard.writeText(valueToCopy)
+        .then(() => {
+            showFeedback(feedbackElement, 'Valor do Alvará de Execução copiado!', 'success');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar:', err);
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = valueToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showFeedback(feedbackElement, 'Valor do Alvará de Execução copiado!', 'success');
+            } catch (fallbackErr) {
+                showFeedback(feedbackElement, 'Erro ao copiar', 'error');
+            }
+        });
+}
+
+// ==============================
 // OUTORGA ONEROSA
 // ==============================
 function toggleOutorga() {
@@ -418,10 +484,11 @@ function toggleOutorga() {
 
 function copyOutorgaResult() {
     const valueToCopy = OUTORGA_VALUE.toFixed(2);
+    const feedbackElement = document.getElementById('outorgaCopyFeedback');
     
     navigator.clipboard.writeText(valueToCopy)
         .then(() => {
-            showCopyFeedback('Valor da Outorga copiado!', 'success');
+            showFeedback(feedbackElement, 'Valor da Outorga copiado!', 'success');
         })
         .catch(err => {
             console.error('Erro ao copiar:', err);
@@ -432,15 +499,15 @@ function copyOutorgaResult() {
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showCopyFeedback('Valor da Outorga copiado!', 'success');
+                showFeedback(feedbackElement, 'Valor da Outorga copiado!', 'success');
             } catch (fallbackErr) {
-                showCopyFeedback('Erro ao copiar', 'error');
+                showFeedback(feedbackElement, 'Erro ao copiar', 'error');
             }
         });
 }
 
 // ==============================
-// COPIAR RESULTADO
+// COPIAR RESULTADO PRINCIPAL
 // ==============================
 function copyResult() {
     if (!currentCalculatedValue || currentCalculatedValue <= 0) {
@@ -526,6 +593,9 @@ function changeLabel() {
     document.getElementById('resultadoContainer').style.display = 'none';
     document.getElementById('resultado').textContent = '';
     document.getElementById('copyFeedback').style.display = 'none';
+    document.getElementById('execucaoResultadoContainer').style.display = 'none';
+    document.getElementById('outorgaResultadoContainer').style.display = 'none';
+    document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
     
     var assunto = document.getElementById('assunto').value;
     var areaLabel = document.getElementById('areaLabel');
@@ -594,6 +664,36 @@ function changeLabel() {
             break;
     }
     
+    // Controle do Alvará de Execução
+    const execucaoContainer = document.getElementById('execucaoContainer');
+    const execucaoResultadoContainer = document.getElementById('execucaoResultadoContainer');
+    const assuntosComExecucao = [
+        'edificacao_nova',
+        'reforma'
+    ];
+    
+    if (assuntosComExecucao.includes(assunto)) {
+        execucaoContainer.style.display = 'block';
+        const toggle = document.getElementById('execucaoToggle');
+        if (toggle) {
+            toggle.checked = false;
+            execucaoEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
+        execucaoResultadoContainer.style.display = 'none';
+    } else {
+        execucaoContainer.style.display = 'none';
+        execucaoResultadoContainer.style.display = 'none';
+        const toggle = document.getElementById('execucaoToggle');
+        if (toggle) {
+            toggle.checked = false;
+            execucaoEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
+    }
+    
     // Controle da Outorga
     const outorgaContainer = document.getElementById('outorgaContainer');
     const outorgaResultadoContainer = document.getElementById('outorgaResultadoContainer');
@@ -614,11 +714,9 @@ function changeLabel() {
             if (switchWrapper) switchWrapper.classList.remove('active');
         }
         outorgaResultadoContainer.style.display = 'none';
-        document.getElementById('resultadoContainer').classList.remove('has-outorga');
     } else {
         outorgaContainer.style.display = 'none';
         outorgaResultadoContainer.style.display = 'none';
-        document.getElementById('resultadoContainer').classList.remove('has-outorga');
         const toggle = document.getElementById('outorgaToggle');
         if (toggle) {
             toggle.checked = false;
@@ -627,6 +725,8 @@ function changeLabel() {
             if (switchWrapper) switchWrapper.classList.remove('active');
         }
     }
+    
+    document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
 }
 
 function calculate() {
@@ -900,8 +1000,10 @@ function calculate() {
     valor = Math.round(valor * 100) / 100;
     currentCalculatedValue = valor;
     
-    // Verificar se outorga está ativa
+    // Verificar se as chaves estão ativas
+    const execucaoEnabled_local = document.getElementById('execucaoToggle')?.checked || false;
     const outorgaEnabled_local = document.getElementById('outorgaToggle')?.checked || false;
+    const execucaoContainer = document.getElementById('execucaoResultadoContainer');
     const outorgaContainer = document.getElementById('outorgaResultadoContainer');
     
     // Exibir resultado base
@@ -909,7 +1011,17 @@ function calculate() {
     resultadoContainer.style.display = 'block';
     copyFeedback.style.display = 'none';
     
-    // Mostrar ou ocultar outorga separadamente
+    // Mostrar ou ocultar Alvará de Execução separadamente
+    if (execucaoEnabled_local) {
+        execucaoContainer.style.display = 'block';
+        execucaoContainer.style.animation = 'fadeIn 0.3s ease-out';
+        resultadoContainer.classList.add('has-execucao');
+    } else {
+        execucaoContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-execucao');
+    }
+    
+    // Mostrar ou ocultar Outorga separadamente
     if (outorgaEnabled_local) {
         outorgaContainer.style.display = 'block';
         outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
