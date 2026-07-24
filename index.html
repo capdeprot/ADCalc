@@ -34,26 +34,6 @@
             </a>
         </p>
 
-        <!-- Contadores -->
-        <!--
-        <div class="counters-container">
-            <div class="counter-card minimal">
-                <div class="counter-label">Sua Sessão</div>
-                <div class="counter-value subtle" id="sessionCounter">R$ 0,00</div>
-                <div class="counter-description">Hoje</div>
-            </div>
-            <div class="counter-card minimal" id="globalCounterCard">
-                <div class="counter-label">Total calculado por usuários desde Fevereiro/2026</div>
-                <div class="counter-value subtle" id="globalCounter">Carregando...</div>
-                <div class="counter-stats" id="globalStats">
-                    <span id="globalCount">0</span> cálculos
-                </div>
-                <div class="counter-description"></div>
-                <div class="counter-update" id="lastUpdate"></div>
-            </div>
-        </div>
-        -->
-
         <!-- Formulário -->
         <form id="simuladorForm" novalidate>
 
@@ -83,9 +63,23 @@
                 </select>
             </div>
 
+            <!-- ALVARÁ DE EXECUÇÃO - TOGGLE -->
+            <div id="execucaoContainer" class="form-section chave-section" style="display: none;">
+                <div class="chave-toggle">
+                    <label class="switch-label">
+                        <span class="switch-text">Alvará de Execução</span>
+                        <div class="switch-wrapper">
+                            <input type="checkbox" id="execucaoToggle" onchange="toggleExecucao()">
+                            <span class="switch-slider"></span>
+                        </div>
+                    </label>
+                    <span class="switch-hint">Valor fixo de R$ 1.116,27</span>
+                </div>
+            </div>
+
             <!-- OUTORGA ONEROSA - TOGGLE -->
-            <div id="outorgaContainer" class="form-section outorga-section" style="display: none;">
-                <div class="outorga-toggle">
+            <div id="outorgaContainer" class="form-section chave-section" style="display: none;">
+                <div class="chave-toggle">
                     <label class="switch-label">
                         <span class="switch-text">Outorga Onerosa</span>
                         <div class="switch-wrapper">
@@ -190,7 +184,7 @@
 
             <button type="button" onclick="calculate()">Calcular</button>
 
-            <!-- Resultado -->
+            <!-- RESULTADO PRINCIPAL -->
             <div id="resultadoContainer" style="display:none;">
                 <div class="resultado-header">
                     <span class="resultado-header-text">Valor estimado</span>
@@ -208,6 +202,24 @@
                 <p id="copyFeedback" class="copy-feedback"></p>
             </div>
 
+            <!-- RESULTADO DA EXECUÇÃO -->
+            <div id="execucaoResultadoContainer" style="display: none;">
+                <div class="resultado-header execucao-header">
+                    <span class="resultado-header-text">Alvará de Execução</span>
+                </div>
+                <div class="resultado-body execucao-body">
+                    <p id="execucaoResultado">R$ 1.116,27</p>
+                    <button type="button" class="copy-btn execucao-copy-btn" onclick="copyExecucaoResult()" title="Copiar valor do Alvará de Execução">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                        </svg>
+                        Copiar
+                    </button>
+                </div>
+                <p id="execucaoCopyFeedback" class="copy-feedback"></p>
+            </div>
+
             <!-- RESULTADO DA OUTORGA -->
             <div id="outorgaResultadoContainer" style="display: none;">
                 <div class="resultado-header outorga-header">
@@ -223,6 +235,7 @@
                         Copiar
                     </button>
                 </div>
+                <p id="outorgaCopyFeedback" class="copy-feedback"></p>
             </div>
 
         </form>
