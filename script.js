@@ -20,6 +20,8 @@ let lastUpdateTime = null;
 let currentCalculatedValue = 0;
 let isOnline = true;
 let updateInterval = null;
+let outorgaEnabled = false;
+const OUTORGA_VALUE = 627.00;
 
 // ==============================
 // INICIALIZAÇÃO
@@ -187,7 +189,7 @@ async function addToRealGlobalCounter(value) {
         const newCount = currentCount + 1;
         
         console.log(`📊 Novo total: ${formatCurrency(currentTotal)} + ${formatCurrency(value)} = ${formatCurrency(newTotal)}`);
-        console.log(`📊 Total de cálculos: ${currentCount} → ${newCount}`); // NOVA LINHA
+        console.log(`📊 Total de cálculos: ${currentCount} → ${newCount}`);
         
         const updateData = {
             total: newTotal,
@@ -215,10 +217,10 @@ async function addToRealGlobalCounter(value) {
             
             updateGlobalCounterDisplay();
             animateGlobalCounter();
-            animateGlobalStats(); // NOVA LINHA
+            animateGlobalStats();
             
             localStorage.setItem('adcalc_real_global', newTotal.toString());
-            localStorage.setItem('adcalc_total_calculations', newCount.toString()); // NOVA LINHA
+            localStorage.setItem('adcalc_total_calculations', newCount.toString());
             localStorage.setItem('adcalc_last_update', lastUpdateTime);
             
             console.log(`✅ Total global atualizado: ${formatCurrency(newTotal)} (${newCount} cálculos)`);
@@ -249,12 +251,10 @@ function updateGlobalCounterDisplay() {
     if (globalCounter) {
         globalCounter.textContent = formatCurrency(realGlobalTotal);
         
-        // Atualizar contagem de cálculos
         if (globalCount) {
             globalCount.textContent = totalCalculations.toLocaleString('pt-BR');
         }
         
-        // Tooltip detalhado
         let tooltip = `💰 Total acumulado: ${formatCurrency(realGlobalTotal)}`;
         if (totalCalculations > 0) {
             tooltip += `\n🧮 ${totalCalculations.toLocaleString('pt-BR')} cálculo${totalCalculations !== 1 ? 's' : ''}`;
@@ -389,6 +389,54 @@ async function syncPendingUpdates() {
     }
     
     localStorage.setItem('adcalc_pending_updates', JSON.stringify(pendingUpdates));
+}
+
+// ==============================
+// OUTORGA ONEROSA
+// ==============================
+function toggleOutorga() {
+    const toggle = document.getElementById('outorgaToggle');
+    const outorgaContainer = document.getElementById('outorgaResultadoContainer');
+    const resultadoContainer = document.getElementById('resultadoContainer');
+    
+    outorgaEnabled = toggle.checked;
+    
+    const switchWrapper = toggle.closest('.switch-wrapper');
+    if (outorgaEnabled) {
+        switchWrapper.classList.add('active');
+        if (resultadoContainer.style.display !== 'none') {
+            outorgaContainer.style.display = 'block';
+            outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
+            resultadoContainer.classList.add('has-outorga');
+        }
+    } else {
+        switchWrapper.classList.remove('active');
+        outorgaContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-outorga');
+    }
+}
+
+function copyOutorgaResult() {
+    const valueToCopy = OUTORGA_VALUE.toFixed(2);
+    
+    navigator.clipboard.writeText(valueToCopy)
+        .then(() => {
+            showCopyFeedback('Valor da Outorga copiado!', 'success');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar:', err);
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = valueToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyFeedback('Valor da Outorga copiado!', 'success');
+            } catch (fallbackErr) {
+                showCopyFeedback('Erro ao copiar', 'error');
+            }
+        });
 }
 
 // ==============================
@@ -544,6 +592,40 @@ function changeLabel() {
             areaStandardContainer.style.display = 'block';
             areaLabel.textContent = 'Área objeto do pedido (m²):';
             break;
+    }
+    
+    // Controle da Outorga
+    const outorgaContainer = document.getElementById('outorgaContainer');
+    const outorgaResultadoContainer = document.getElementById('outorgaResultadoContainer');
+    const assuntosComOutorga = [
+        'edificacao_nova',
+        'reforma',
+        'projeto_modificativo_edificacao',
+        'projeto_modificativo_reforma'
+    ];
+    
+    if (assuntosComOutorga.includes(assunto)) {
+        outorgaContainer.style.display = 'block';
+        const toggle = document.getElementById('outorgaToggle');
+        if (toggle) {
+            toggle.checked = false;
+            outorgaEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
+        outorgaResultadoContainer.style.display = 'none';
+        document.getElementById('resultadoContainer').classList.remove('has-outorga');
+    } else {
+        outorgaContainer.style.display = 'none';
+        outorgaResultadoContainer.style.display = 'none';
+        document.getElementById('resultadoContainer').classList.remove('has-outorga');
+        const toggle = document.getElementById('outorgaToggle');
+        if (toggle) {
+            toggle.checked = false;
+            outorgaEnabled = false;
+            const switchWrapper = toggle.closest('.switch-wrapper');
+            if (switchWrapper) switchWrapper.classList.remove('active');
+        }
     }
 }
 
@@ -818,9 +900,24 @@ function calculate() {
     valor = Math.round(valor * 100) / 100;
     currentCalculatedValue = valor;
     
+    // Verificar se outorga está ativa
+    const outorgaEnabled_local = document.getElementById('outorgaToggle')?.checked || false;
+    const outorgaContainer = document.getElementById('outorgaResultadoContainer');
+    
+    // Exibir resultado base
     resultado.textContent = formatCurrency(valor);
     resultadoContainer.style.display = 'block';
     copyFeedback.style.display = 'none';
+    
+    // Mostrar ou ocultar outorga separadamente
+    if (outorgaEnabled_local) {
+        outorgaContainer.style.display = 'block';
+        outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
+        resultadoContainer.classList.add('has-outorga');
+    } else {
+        outorgaContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-outorga');
+    }
     
     resultadoContainer.style.animation = 'none';
     setTimeout(() => {
