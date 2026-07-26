@@ -26,6 +26,31 @@ const EXECUCAO_VALUE = 1116.27;
 const OUTORGA_VALUE = 627.00;
 
 // ==============================
+// MAPEAMENTO DE ASSUNTOS PARA NOMES RESUMIDOS
+// ==============================
+const nomesAssuntosResumidos = {
+    'edificacao_nova': 'Alvará de Aprovação',
+    'reforma': 'Alvará de Aprovação',
+    'revalidacao': 'Revalidação',
+    'execucao': 'Alvará de Execução',
+    'projeto_modificativo_edificacao': 'Projeto Modificativo',
+    'projeto_modificativo_reforma': 'Projeto Modificativo',
+    'avanco_grua': 'Avanço de Grua',
+    'tapume': 'Avanço de Tapume',
+    'estande_vendas': 'Estande de Vendas',
+    'alvara_heliponto': 'Heliponto',
+    'execucao_erb': 'ERB',
+    'reuniao': 'Local de Reunião',
+    'certificado_seguranca': 'Certificado de Segurança',
+    'acessibilidade': 'Certificado de Acessibilidade',
+    'sistema_seguranca': 'Sistema de Segurança',
+    'tanques_bombas': 'Tanques e Bombas',
+    'desmembramento_remembramento': 'Desmembramento/Remembramento',
+    'reparcelamento': 'Reparcelamento',
+    'diretrizes_urbanisticas': 'Diretrizes Urbanísticas'
+};
+
+// ==============================
 // INICIALIZAÇÃO
 // ==============================
 document.addEventListener('DOMContentLoaded', function() {
@@ -415,6 +440,8 @@ function toggleExecucao() {
     const toggle = document.getElementById('execucaoToggle');
     const execucaoContainer = document.getElementById('execucaoResultadoContainer');
     const resultadoContainer = document.getElementById('resultadoContainer');
+    const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
+    const assunto = document.getElementById('assunto').value;
     
     execucaoEnabled = toggle.checked;
     
@@ -426,10 +453,25 @@ function toggleExecucao() {
             execucaoContainer.style.animation = 'fadeIn 0.3s ease-out';
             resultadoContainer.classList.add('has-execucao');
         }
+        // Atualizar título com chave ativa
+        if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
+            resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
+        }
     } else {
         switchWrapper.classList.remove('active');
         execucaoContainer.style.display = 'none';
         resultadoContainer.classList.remove('has-execucao');
+        // Verificar se a outra chave está ativa
+        const outorgaAtiva = document.getElementById('outorgaToggle')?.checked || false;
+        if (!outorgaAtiva) {
+            if (resultadoHeaderText) {
+                resultadoHeaderText.textContent = 'Valor Estimado';
+            }
+        } else {
+            if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
+                resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
+            }
+        }
     }
 }
 
@@ -464,6 +506,8 @@ function toggleOutorga() {
     const toggle = document.getElementById('outorgaToggle');
     const outorgaContainer = document.getElementById('outorgaResultadoContainer');
     const resultadoContainer = document.getElementById('resultadoContainer');
+    const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
+    const assunto = document.getElementById('assunto').value;
     
     outorgaEnabled = toggle.checked;
     
@@ -475,10 +519,25 @@ function toggleOutorga() {
             outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
             resultadoContainer.classList.add('has-outorga');
         }
+        // Atualizar título com chave ativa
+        if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
+            resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
+        }
     } else {
         switchWrapper.classList.remove('active');
         outorgaContainer.style.display = 'none';
         resultadoContainer.classList.remove('has-outorga');
+        // Verificar se a outra chave está ativa
+        const execucaoAtiva = document.getElementById('execucaoToggle')?.checked || false;
+        if (!execucaoAtiva) {
+            if (resultadoHeaderText) {
+                resultadoHeaderText.textContent = 'Valor Estimado';
+            }
+        } else {
+            if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
+                resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
+            }
+        }
     }
 }
 
@@ -610,6 +669,12 @@ function changeLabel() {
     reformaContainer.style.display = 'none';
     quantidadeUnidadesContainer.style.display = 'none';
     projetoModificativoContainer.style.display = 'none';
+
+    // Atualizar o título do resultado com "Valor Estimado" (padrão)
+    const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
+    if (resultadoHeaderText) {
+        resultadoHeaderText.textContent = 'Valor Estimado';
+    }
 
     switch (assunto) {
         case 'reforma':
@@ -1005,6 +1070,17 @@ function calculate() {
     const outorgaEnabled_local = document.getElementById('outorgaToggle')?.checked || false;
     const execucaoContainer = document.getElementById('execucaoResultadoContainer');
     const outorgaContainer = document.getElementById('outorgaResultadoContainer');
+    const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
+    
+    // Atualizar o título do resultado
+    if (resultadoHeaderText) {
+        const temChaveAtiva = execucaoEnabled_local || outorgaEnabled_local;
+        if (temChaveAtiva && nomesAssuntosResumidos[assunto]) {
+            resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
+        } else {
+            resultadoHeaderText.textContent = 'Valor Estimado';
+        }
+    }
     
     // Exibir resultado base
     resultado.textContent = formatCurrency(valor);
