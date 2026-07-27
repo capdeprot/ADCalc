@@ -22,6 +22,7 @@ let isOnline = true;
 let updateInterval = null;
 let execucaoEnabled = false;
 let outorgaEnabled = false;
+let currentBaseValue = 0;
 const EXECUCAO_VALUE = 1116.27;
 const OUTORGA_VALUE = 627.00;
 
@@ -434,6 +435,30 @@ function showFeedback(element, message, type) {
 }
 
 // ==============================
+// ATUALIZAR SOMA TOTAL
+// ==============================
+function updateSomaTotal() {
+    const somaContainer = document.getElementById('somaTotalContainer');
+    const somaValor = document.getElementById('somaTotalValor');
+    
+    if (!somaContainer || !somaValor) return;
+    
+    const temChaveAtiva = execucaoEnabled || outorgaEnabled;
+    
+    if (temChaveAtiva && currentBaseValue > 0) {
+        let soma = currentBaseValue;
+        if (execucaoEnabled) soma += EXECUCAO_VALUE;
+        if (outorgaEnabled) soma += OUTORGA_VALUE;
+        
+        somaValor.textContent = formatCurrency(soma);
+        somaContainer.style.display = 'block';
+        somaContainer.style.animation = 'fadeIn 0.3s ease-out';
+    } else {
+        somaContainer.style.display = 'none';
+    }
+}
+
+// ==============================
 // ALVARÁ DE EXECUÇÃO
 // ==============================
 function toggleExecucao() {
@@ -473,6 +498,9 @@ function toggleExecucao() {
             }
         }
     }
+    
+    // Atualizar soma total
+    updateSomaTotal();
 }
 
 function copyExecucaoResult() {
@@ -539,6 +567,9 @@ function toggleOutorga() {
             }
         }
     }
+    
+    // Atualizar soma total
+    updateSomaTotal();
 }
 
 function copyOutorgaResult() {
@@ -654,6 +685,7 @@ function changeLabel() {
     document.getElementById('copyFeedback').style.display = 'none';
     document.getElementById('execucaoResultadoContainer').style.display = 'none';
     document.getElementById('outorgaResultadoContainer').style.display = 'none';
+    document.getElementById('somaTotalContainer').style.display = 'none';
     document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
     
     var assunto = document.getElementById('assunto').value;
@@ -792,6 +824,7 @@ function changeLabel() {
     }
     
     document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
+    document.getElementById('somaTotalContainer').style.display = 'none';
 }
 
 function calculate() {
@@ -1063,6 +1096,7 @@ function calculate() {
     }
 
     valor = Math.round(valor * 100) / 100;
+    currentBaseValue = valor;
     currentCalculatedValue = valor;
     
     // Verificar se as chaves estão ativas
@@ -1106,6 +1140,9 @@ function calculate() {
         outorgaContainer.style.display = 'none';
         resultadoContainer.classList.remove('has-outorga');
     }
+    
+    // Atualizar soma total (agora abaixo de todas as caixas)
+    updateSomaTotal();
     
     resultadoContainer.style.animation = 'none';
     setTimeout(() => {
