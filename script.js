@@ -22,9 +22,13 @@ let isOnline = true;
 let updateInterval = null;
 let execucaoEnabled = false;
 let outorgaEnabled = false;
+let taxaAutuacaoEnabled = false;
 let currentBaseValue = 0;
 const EXECUCAO_VALUE = 1116.27;
 const OUTORGA_VALUE = 627.00;
+const TAXA_AUTUACAO_FIXO = 30.20;
+const TAXA_AUTUACAO_ADICIONAL = 2.90;
+let isCalculated = false;
 
 // ==============================
 // MAPEAMENTO DE ASSUNTOS PARA NOMES RESUMIDOS
@@ -435,6 +439,40 @@ function showFeedback(element, message, type) {
 }
 
 // ==============================
+// CALCULAR TAXA DE AUTUAÇÃO
+// ==============================
+function getTaxaAutuacaoValue() {
+    const mbAdicionais = parseFloat(document.getElementById('mbAdicionais').value) || 0;
+    return TAXA_AUTUACAO_FIXO + (mbAdicionais * TAXA_AUTUACAO_ADICIONAL);
+}
+
+function updateTaxaAutuacao() {
+    const taxaResultado = document.getElementById('taxaAutuacaoResultado');
+    if (taxaResultado) {
+        const valor = getTaxaAutuacaoValue();
+        taxaResultado.textContent = formatCurrency(valor);
+    }
+    // Se já foi calculado, atualiza a soma total
+    if (isCalculated) {
+        updateSomaTotal();
+    }
+}
+
+// ==============================
+// LIMPAR RESULTADOS
+// ==============================
+function clearResults() {
+    // Ocultar todas as caixas de resultado
+    document.getElementById('resultadoContainer').style.display = 'none';
+    document.getElementById('taxaAutuacaoResultadoContainer').style.display = 'none';
+    document.getElementById('execucaoResultadoContainer').style.display = 'none';
+    document.getElementById('outorgaResultadoContainer').style.display = 'none';
+    document.getElementById('somaTotalContainer').style.display = 'none';
+    document.getElementById('resultadoContainer').classList.remove('has-taxa-autuacao', 'has-execucao', 'has-outorga');
+    isCalculated = false;
+}
+
+// ==============================
 // ATUALIZAR SOMA TOTAL
 // ==============================
 function updateSomaTotal() {
@@ -443,12 +481,13 @@ function updateSomaTotal() {
     
     if (!somaContainer || !somaValor) return;
     
-    const temChaveAtiva = execucaoEnabled || outorgaEnabled;
+    const temChaveAtiva = execucaoEnabled || outorgaEnabled || taxaAutuacaoEnabled;
     
     if (temChaveAtiva && currentBaseValue > 0) {
         let soma = currentBaseValue;
         if (execucaoEnabled) soma += EXECUCAO_VALUE;
         if (outorgaEnabled) soma += OUTORGA_VALUE;
+        if (taxaAutuacaoEnabled) soma += getTaxaAutuacaoValue();
         
         somaValor.textContent = formatCurrency(soma);
         somaContainer.style.display = 'block';
@@ -456,6 +495,71 @@ function updateSomaTotal() {
     } else {
         somaContainer.style.display = 'none';
     }
+}
+
+// ==============================
+// TAXA DE AUTUAÇÃO
+// ==============================
+function toggleTaxaAutuacao() {
+    const toggle = document.getElementById('taxaAutuacaoToggle');
+    const inputContainer = document.getElementById('taxaAutuacaoInputContainer');
+    const resultadoContainer = document.getElementById('taxaAutuacaoResultadoContainer');
+    const resultadoContainerMain = document.getElementById('resultadoContainer');
+    const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
+    const assunto = document.getElementById('assunto').value;
+    
+    taxaAutuacaoEnabled = toggle.checked;
+    
+    const switchWrapper = toggle.closest('.switch-wrapper');
+    if (taxaAutuacaoEnabled) {
+        switchWrapper.classList.add('active');
+        inputContainer.style.display = 'block';
+        // Atualizar valor da taxa
+        updateTaxaAutuacao();
+    } else {
+        switchWrapper.classList.remove('active');
+        inputContainer.style.display = 'none';
+        resultadoContainer.style.display = 'none';
+        resultadoContainerMain.classList.remove('has-taxa-autuacao');
+    }
+    
+    // Limpar resultados se já houve cálculo
+    if (isCalculated) {
+        clearResults();
+        // Atualizar título para "Valor Estimado"
+        if (resultadoHeaderText) {
+            resultadoHeaderText.textContent = 'Valor Estimado';
+        }
+    }
+    
+    // Atualizar soma total se houver cálculo
+    if (isCalculated) {
+        updateSomaTotal();
+    }
+}
+
+function copyTaxaAutuacaoResult() {
+    const valueToCopy = getTaxaAutuacaoValue().toFixed(2);
+    const feedbackElement = document.getElementById('taxaAutuacaoCopyFeedback');
+    
+    navigator.clipboard.writeText(valueToCopy)
+        .then(() => {
+            showFeedback(feedbackElement, 'Valor da Taxa de Autuação copiado!', 'success');
+        })
+        .catch(err => {
+            console.error('Erro ao copiar:', err);
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = valueToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showFeedback(feedbackElement, 'Valor da Taxa de Autuação copiado!', 'success');
+            } catch (fallbackErr) {
+                showFeedback(feedbackElement, 'Erro ao copiar', 'error');
+            }
+        });
 }
 
 // ==============================
@@ -473,34 +577,19 @@ function toggleExecucao() {
     const switchWrapper = toggle.closest('.switch-wrapper');
     if (execucaoEnabled) {
         switchWrapper.classList.add('active');
-        if (resultadoContainer.style.display !== 'none') {
-            execucaoContainer.style.display = 'block';
-            execucaoContainer.style.animation = 'fadeIn 0.3s ease-out';
-            resultadoContainer.classList.add('has-execucao');
-        }
-        // Atualizar título com chave ativa
-        if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
-            resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
-        }
     } else {
         switchWrapper.classList.remove('active');
         execucaoContainer.style.display = 'none';
         resultadoContainer.classList.remove('has-execucao');
-        // Verificar se a outra chave está ativa
-        const outorgaAtiva = document.getElementById('outorgaToggle')?.checked || false;
-        if (!outorgaAtiva) {
-            if (resultadoHeaderText) {
-                resultadoHeaderText.textContent = 'Valor Estimado';
-            }
-        } else {
-            if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
-                resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
-            }
-        }
     }
     
-    // Atualizar soma total
-    updateSomaTotal();
+    // Limpar resultados se já houve cálculo
+    if (isCalculated) {
+        clearResults();
+        if (resultadoHeaderText) {
+            resultadoHeaderText.textContent = 'Valor Estimado';
+        }
+    }
 }
 
 function copyExecucaoResult() {
@@ -542,34 +631,19 @@ function toggleOutorga() {
     const switchWrapper = toggle.closest('.switch-wrapper');
     if (outorgaEnabled) {
         switchWrapper.classList.add('active');
-        if (resultadoContainer.style.display !== 'none') {
-            outorgaContainer.style.display = 'block';
-            outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
-            resultadoContainer.classList.add('has-outorga');
-        }
-        // Atualizar título com chave ativa
-        if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
-            resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
-        }
     } else {
         switchWrapper.classList.remove('active');
         outorgaContainer.style.display = 'none';
         resultadoContainer.classList.remove('has-outorga');
-        // Verificar se a outra chave está ativa
-        const execucaoAtiva = document.getElementById('execucaoToggle')?.checked || false;
-        if (!execucaoAtiva) {
-            if (resultadoHeaderText) {
-                resultadoHeaderText.textContent = 'Valor Estimado';
-            }
-        } else {
-            if (resultadoHeaderText && nomesAssuntosResumidos[assunto]) {
-                resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
-            }
-        }
     }
     
-    // Atualizar soma total
-    updateSomaTotal();
+    // Limpar resultados se já houve cálculo
+    if (isCalculated) {
+        clearResults();
+        if (resultadoHeaderText) {
+            resultadoHeaderText.textContent = 'Valor Estimado';
+        }
+    }
 }
 
 function copyOutorgaResult() {
@@ -680,13 +754,14 @@ function changeLabel() {
     document.getElementById('areaRegularizarModificativo').value = '';
     document.getElementById('areaTotalModificativo').value = '';
     
-    document.getElementById('resultadoContainer').style.display = 'none';
-    document.getElementById('resultado').textContent = '';
-    document.getElementById('copyFeedback').style.display = 'none';
-    document.getElementById('execucaoResultadoContainer').style.display = 'none';
-    document.getElementById('outorgaResultadoContainer').style.display = 'none';
-    document.getElementById('somaTotalContainer').style.display = 'none';
-    document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
+    // Limpar resultados ao mudar de assunto
+    clearResults();
+    
+    // Resetar título
+    const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
+    if (resultadoHeaderText) {
+        resultadoHeaderText.textContent = 'Valor Estimado';
+    }
     
     var assunto = document.getElementById('assunto').value;
     var areaLabel = document.getElementById('areaLabel');
@@ -701,12 +776,6 @@ function changeLabel() {
     reformaContainer.style.display = 'none';
     quantidadeUnidadesContainer.style.display = 'none';
     projetoModificativoContainer.style.display = 'none';
-
-    // Atualizar o título do resultado com "Valor Estimado" (padrão)
-    const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
-    if (resultadoHeaderText) {
-        resultadoHeaderText.textContent = 'Valor Estimado';
-    }
 
     switch (assunto) {
         case 'reforma':
@@ -760,6 +829,22 @@ function changeLabel() {
             areaLabel.textContent = 'Área objeto do pedido (m²):';
             break;
     }
+    
+    // Controle da Taxa de Autuação (presente em TODOS os assuntos)
+    const taxaAutuacaoContainer = document.getElementById('taxaAutuacaoContainer');
+    const taxaAutuacaoResultadoContainer = document.getElementById('taxaAutuacaoResultadoContainer');
+    
+    // Taxa de Autuação aparece em TODOS os assuntos
+    taxaAutuacaoContainer.style.display = 'block';
+    const toggleTaxa = document.getElementById('taxaAutuacaoToggle');
+    if (toggleTaxa) {
+        toggleTaxa.checked = false;
+        taxaAutuacaoEnabled = false;
+        const switchWrapper = toggleTaxa.closest('.switch-wrapper');
+        if (switchWrapper) switchWrapper.classList.remove('active');
+    }
+    document.getElementById('taxaAutuacaoInputContainer').style.display = 'none';
+    taxaAutuacaoResultadoContainer.style.display = 'none';
     
     // Controle do Alvará de Execução
     const execucaoContainer = document.getElementById('execucaoContainer');
@@ -823,8 +908,12 @@ function changeLabel() {
         }
     }
     
-    document.getElementById('resultadoContainer').classList.remove('has-execucao', 'has-outorga');
+    document.getElementById('resultadoContainer').classList.remove('has-taxa-autuacao', 'has-execucao', 'has-outorga');
     document.getElementById('somaTotalContainer').style.display = 'none';
+    
+    // Resetar MB's adicionais
+    document.getElementById('mbAdicionais').value = '0';
+    isCalculated = false;
 }
 
 function calculate() {
@@ -1102,13 +1191,15 @@ function calculate() {
     // Verificar se as chaves estão ativas
     const execucaoEnabled_local = document.getElementById('execucaoToggle')?.checked || false;
     const outorgaEnabled_local = document.getElementById('outorgaToggle')?.checked || false;
+    const taxaAutuacaoEnabled_local = document.getElementById('taxaAutuacaoToggle')?.checked || false;
     const execucaoContainer = document.getElementById('execucaoResultadoContainer');
     const outorgaContainer = document.getElementById('outorgaResultadoContainer');
+    const taxaAutuacaoContainer = document.getElementById('taxaAutuacaoResultadoContainer');
     const resultadoHeaderText = document.querySelector('#resultadoContainer .resultado-header-text');
     
     // Atualizar o título do resultado
     if (resultadoHeaderText) {
-        const temChaveAtiva = execucaoEnabled_local || outorgaEnabled_local;
+        const temChaveAtiva = execucaoEnabled_local || outorgaEnabled_local || taxaAutuacaoEnabled_local;
         if (temChaveAtiva && nomesAssuntosResumidos[assunto]) {
             resultadoHeaderText.textContent = `Valor estimado - ${nomesAssuntosResumidos[assunto]}`;
         } else {
@@ -1121,7 +1212,18 @@ function calculate() {
     resultadoContainer.style.display = 'block';
     copyFeedback.style.display = 'none';
     
-    // Mostrar ou ocultar Alvará de Execução separadamente
+    // Mostrar ou ocultar Taxa de Autuação
+    if (taxaAutuacaoEnabled_local) {
+        taxaAutuacaoContainer.style.display = 'block';
+        taxaAutuacaoContainer.style.animation = 'fadeIn 0.3s ease-out';
+        resultadoContainer.classList.add('has-taxa-autuacao');
+        document.getElementById('taxaAutuacaoResultado').textContent = formatCurrency(getTaxaAutuacaoValue());
+    } else {
+        taxaAutuacaoContainer.style.display = 'none';
+        resultadoContainer.classList.remove('has-taxa-autuacao');
+    }
+    
+    // Mostrar ou ocultar Alvará de Execução
     if (execucaoEnabled_local) {
         execucaoContainer.style.display = 'block';
         execucaoContainer.style.animation = 'fadeIn 0.3s ease-out';
@@ -1131,7 +1233,7 @@ function calculate() {
         resultadoContainer.classList.remove('has-execucao');
     }
     
-    // Mostrar ou ocultar Outorga separadamente
+    // Mostrar ou ocultar Outorga
     if (outorgaEnabled_local) {
         outorgaContainer.style.display = 'block';
         outorgaContainer.style.animation = 'fadeIn 0.3s ease-out';
@@ -1141,7 +1243,10 @@ function calculate() {
         resultadoContainer.classList.remove('has-outorga');
     }
     
-    // Atualizar soma total (agora abaixo de todas as caixas)
+    // Marcar que o cálculo foi realizado
+    isCalculated = true;
+    
+    // Atualizar soma total
     updateSomaTotal();
     
     resultadoContainer.style.animation = 'none';
