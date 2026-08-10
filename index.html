@@ -63,6 +63,26 @@
                 </select>
             </div>
 
+            <!-- TAXA DE AUTUAÇÃO - TOGGLE -->
+            <div id="taxaAutuacaoContainer" class="form-section chave-section" style="display: none;">
+                <div class="chave-toggle">
+                    <label class="switch-label">
+                        <span class="switch-text">Taxa de autuação</span>
+                        <div class="switch-wrapper">
+                            <input type="checkbox" id="taxaAutuacaoToggle" onchange="toggleTaxaAutuacao()">
+                            <span class="switch-slider"></span>
+                        </div>
+                    </label>
+                    <span class="switch-hint">Valor fixo de R$ 30,20 + R$ 2,90/MB adicional</span>
+                </div>
+                <div id="taxaAutuacaoInputContainer" style="display: none; margin-top: 12px;">
+                    <div class="form-field" style="margin-bottom: 0;">
+                        <label for="mbAdicionais" style="font-size: 0.78rem; color: var(--ink-muted);">MB's adicionais (acima de 50MB):</label>
+                        <input type="number" id="mbAdicionais" step="0.01" min="0" value="0" onchange="updateTaxaAutuacao()" oninput="updateTaxaAutuacao()" style="font-family: 'DM Mono', monospace; font-size: 0.9rem; padding: 8px 12px; border: 1.5px solid var(--ink-faint); border-radius: var(--radius); width: 100%;">
+                    </div>
+                </div>
+            </div>
+
             <!-- ALVARÁ DE EXECUÇÃO - TOGGLE -->
             <div id="execucaoContainer" class="form-section chave-section" style="display: none;">
                 <div class="chave-toggle">
@@ -202,6 +222,24 @@
                 <p id="copyFeedback" class="copy-feedback"></p>
             </div>
 
+            <!-- RESULTADO DA TAXA DE AUTUAÇÃO -->
+            <div id="taxaAutuacaoResultadoContainer" style="display: none;">
+                <div class="resultado-header taxa-autuacao-header">
+                    <span class="resultado-header-text">Taxa de autuação</span>
+                </div>
+                <div class="resultado-body taxa-autuacao-body">
+                    <p id="taxaAutuacaoResultado">R$ 30,20</p>
+                    <button type="button" class="copy-btn taxa-autuacao-copy-btn" onclick="copyTaxaAutuacaoResult()" title="Copiar valor da Taxa de Autuação">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                        </svg>
+                        Copiar
+                    </button>
+                </div>
+                <p id="taxaAutuacaoCopyFeedback" class="copy-feedback"></p>
+            </div>
+
             <!-- RESULTADO DA EXECUÇÃO -->
             <div id="execucaoResultadoContainer" style="display: none;">
                 <div class="resultado-header execucao-header">
@@ -238,10 +276,9 @@
                 <p id="outorgaCopyFeedback" class="copy-feedback"></p>
             </div>
 
-            <!-- SOMA TOTAL (aparece abaixo de TODAS as caixas) -->
+            <!-- SOMA TOTAL (abaixo de TODAS as caixas) -->
             <div id="somaTotalContainer" style="display: none;">
                 <div class="soma-total-wrapper">
-                    <div class="soma-total-divider"></div>
                     <div class="soma-total-body">
                         <span class="soma-total-label">Total</span>
                         <span class="soma-total-value" id="somaTotalValor">R$ 0,00</span>
