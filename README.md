@@ -1,4 +1,4 @@
-# AD Calc — Simulador de Preços Públicos CAP/DEPROT
+# AD Calc — Simulador de Preços Públicos
 
 Ferramenta web para simulação de preços públicos referentes a processos de licenciamento urbanístico, desenvolvida para uso da **CAP/DEPROT — Coordenadoria de Atendimento ao Público / Divisão de Protocolo** da Secretaria Municipal de Urbanismo e Licenciamento (SMUL) de São Paulo.
 
