@@ -1,19 +1,19 @@
-# AD Calc — Simulador de Preços Públicos
+# AD Calc — Simulador de Preços Públicos CAP/DEPROT
 
-Ferramenta web para simulação de preços públicos referentes a processos de licenciamento urbanístico, desenvolvida para uso interno da **CAP/DEPROT — Coordenadoria de Atendimento ao Público / Divisão de Protocolo** da Secretaria Municipal de Urbanismo e Licenciamento (SMUL) de São Paulo.
+Ferramenta web para simulação de preços públicos referentes a processos de licenciamento urbanístico, desenvolvida para uso da **CAP/DEPROT — Coordenadoria de Atendimento ao Público / Divisão de Protocolo** da Secretaria Municipal de Urbanismo e Licenciamento (SMUL) de São Paulo.
 
 Os valores calculados seguem a **Tabela de Taxas e Emolumentos atualizada em fevereiro de 2026**.
 
 ---
 
-## Processos contemplados
+## 📋 Processos contemplados
 
-A ferramenta cobre 18 tipos de processo, distribuídos entre alvarás, certificados e cadastros:
+A ferramenta cobre 19 tipos de processo, distribuídos entre alvarás, certificados, cadastros e taxas:
 
 - Alvará de Aprovação de Edificação Nova
-- Alvará de Execução
 - Alvará de Aprovação de Reforma
 - Revalidação de Alvará de Aprovação
+- Alvará de Execução
 - Projeto Modificativo de Alvará de Aprovação e Execução de Edificação Nova
 - Projeto Modificativo de Alvará de Aprovação e Execução de Reforma
 - Alvará de Autorização de Avanço de Grua Sobre o Espaço Público
@@ -32,30 +32,54 @@ A ferramenta cobre 18 tipos de processo, distribuídos entre alvarás, certifica
 
 ---
 
-## Funcionalidades
+## ⚙️ Funcionalidades
 
-**Cálculo**
-Simulação automática do valor estimado a partir das variáveis do processo (área, tipo, quadro de reformas etc.), com resultado exibido imediatamente e botão de cópia do valor para uso em correspondências e guias.
+### **Cálculo automático**
+Simulação do valor estimado a partir das variáveis do processo (área, tipo, quadro de reformas etc.), com resultado exibido imediatamente.
 
-**Contador de sessão**
+### **Botão de cópia do valor**
+Cada resultado exibido possui um botão que copia o valor no formato internacional (ex: `2260.00`), facilitando o uso em correspondências, planilhas e guias de recolhimento.
+
+### **Contador de sessão**
 Acumula o total calculado pelo usuário durante o dia corrente, com persistência via `localStorage` e reset automático à meia-noite.
 
-**Contador global**
-Soma em tempo real de todos os valores calculados por todos os usuários desde fevereiro de 2026, sincronizada via [JSONBin.io](https://jsonbin.io) com polling de 30 segundos. Suporta modo offline com fila de pendências sincronizada ao restabelecer conexão.
+### **Chaves complementares**
+O simulador permite adicionar taxas complementares ao valor estimado:
 
-**Operação offline**
-Cálculos realizados sem conectividade são enfileirados localmente e enviados ao contador global assim que a conexão é restaurada.
+- **Taxa de autuação** (presente em todos os assuntos)
+  - Valor fixo de R$ 30,20
+  - Campo para MB's adicionais (R$ 2,90 por MB acima de 50MB)
+  - A caixa de resultado exibe a soma do valor fixo com o cálculo dos MB's adicionais
+  - Cor: verde
+
+- **Alvará de Execução** (presente em Edificação Nova e Reforma)
+  - Valor fixo de R$ 1.116,27
+  - Cor: laranja neon
+
+- **Outorga Onerosa** (presente em Edificação Nova, Reforma e Projetos Modificativos)
+  - Valor fixo de R$ 627,00
+  - Cor: laranja neon
+
+### **Soma total**
+Quando uma ou mais chaves complementares estão ativas, uma caixa adicional exibe a soma de todos os valores (valor estimado + chaves ativas), com o título "Total".
+
+### **Título dinâmico**
+O título da caixa de resultado principal se adapta automaticamente:
+- **Sem chave ativa**: "Valor Estimado"
+- **Com chave ativa**: "Valor estimado — [Assunto resumido]"
+
+### **Interface responsiva**
+Design adaptável para computadores, tablets e smartphones, garantindo usabilidade em qualquer dispositivo.
 
 ---
 
-## Estrutura de arquivos
-
-```
+## 📁 Estrutura de arquivos
 ADCalc/
-├── index.html                              # Estrutura da aplicação
-├── styles.css                              # Estilos e design system
-├── script.js                               # Lógica de cálculo e contadores
-├── manifest.json                           # Configuração PWA
+├── index.html # Estrutura da aplicação
+├── styles.css # Estilos e design system
+├── script.js # Lógica de cálculo e contadores
+├── manifest.json # Configuração PWA
+├── README.md # Documentação
 ├── favicon.ico
 ├── favicon-16x16.png
 ├── favicon-32x32.png
@@ -63,34 +87,81 @@ ADCalc/
 ├── android-chrome-512x512.png
 ├── apple-touch-icon.png
 └── Tabela de Taxas e Emolumentos - Fevereiro 2026.pdf
+
+---
+
+## 🔧 Como usar
+
+1. **Selecione o assunto** desejado no menu suspenso
+2. **Preencha os campos** com as informações solicitadas (área, quadros de reforma, etc.)
+3. **Ative as chaves complementares** desejadas (Taxa de autuação, Alvará de Execução e/ou Outorga Onerosa)
+4. **Clique em "Calcular"** para visualizar o valor estimado
+5. **Copie o valor** utilizando o botão ao lado de cada resultado
+6. **Acompanhe o total** na caixa "Total" ao final da página
+
+---
+
+## 💾 Armazenamento de dados
+
+O simulador utiliza **localStorage** para:
+- Armazenar o total da sessão do usuário (reset diário)
+- Manter histórico de cálculos realizados
+
+**Nenhum dado é enviado ou armazenado em servidores externos.** Toda a lógica de cálculo e armazenamento ocorre localmente no navegador do usuário.
+
+---
+
+## 🚀 Tecnologias utilizadas
+
+- **HTML5** — Estrutura da aplicação
+- **CSS3** — Estilização e design responsivo
+- **JavaScript (ES6+)** — Lógica de cálculo e interatividade
+- **LocalStorage** — Persistência local dos dados
+- **PWA (Progressive Web App)** — Permite instalação como aplicativo
+
+---
+
+## 📱 Instalação como PWA
+
+1. Acesse o site no navegador (Chrome, Edge ou Safari)
+2. Clique em **"Instalar"** ou **"Adicionar à tela inicial"**
+3. Utilize como um aplicativo nativo em seu dispositivo
+
+---
+
+## 🖥️ Desenvolvimento local
+
+Para executar o projeto localmente:
+
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/ad-calc.git
+
+# Navegue até a pasta do projeto
+cd ad-calc
+
+# Inicie um servidor local (exemplo com Python)
+python -m http.server 8000
+
+# Acesse no navegador
+http://localhost:8000
 ```
 
----
+📝 Observações importantes
+Os valores calculados são estimativas para fins de orientação
 
-## Configuração do contador global (JSONBin)
+Os valores oficiais constam da tabela de referência vinculada na interface
 
-As credenciais de acesso à API do JSONBin estão declaradas em `index.html`, no bloco de configuração antes do carregamento do script:
+Para valores oficiais, consulte a Tabela de Taxas e Emolumentos — Fevereiro/2026
 
-```js
-window.JSONBIN_CONFIG = {
-    BIN_ID: 'SEU_BIN_ID',
-    API_KEY: 'SUA_API_KEY',
-    UPDATE_INTERVAL: 30000   // intervalo de polling em ms
-};
-```
+O sistema funciona completamente offline após o primeiro carregamento da página
 
-Para trocar o bin de dados, basta substituir `BIN_ID` e `API_KEY` pelos valores do novo bin criado no painel do JSONBin.io. O script inicializa a estrutura do bin automaticamente na primeira execução caso o campo `total` esteja ausente.
+📩 Suporte
+Dúvidas, sugestões ou problemas técnicos, entre em contato:
+afandrade@prefeitura.sp.gov.br
+Setor: CAP/DEPROT · SMUL · Prefeitura de São Paulo
 
----
+📄 Licença
+Uso interno — Coordenadoria de Atendimento ao Público / Divisão de Protocolo (CAP/DEPROT)
 
-## Observações técnicas
-
-- A aplicação não depende de frameworks ou bibliotecas externas — HTML, CSS e JavaScript puros.
-- Tipografia: **DM Sans** (interface) + **DM Mono** (valores numéricos), carregadas via Google Fonts.
-- Os valores calculados são **estimativas** para fins de orientação; os valores oficiais constam da tabela de referência vinculada na interface.
-- A chave de API do JSONBin exposta no cliente possui escopo restrito de leitura/escrita apenas ao bin configurado.
-
----
-
-Desenvolvido por **Anderson Andrade** — CAP/DEPROT · SMUL · Prefeitura de São Paulo
-
+**Desenvolvido por Anderson Ferreira de Andrade — CAP/DEPROT · SMUL · Prefeitura de São Paulo**
