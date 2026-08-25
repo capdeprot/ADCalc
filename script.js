@@ -69,6 +69,35 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
+function openHelpModal() {
+    const modal = document.getElementById('helpModal');
+    if (!modal) return;
+
+    modal.hidden = false;
+    document.body.classList.add('modal-open');
+
+    const closeButton = modal.querySelector('.help-modal-close');
+    if (closeButton) closeButton.focus();
+}
+
+function closeHelpModal() {
+    const modal = document.getElementById('helpModal');
+    if (!modal) return;
+
+    modal.hidden = true;
+    document.body.classList.remove('modal-open');
+
+    const helpButton = document.querySelector('.help-button');
+    if (helpButton) helpButton.focus();
+}
+
+document.addEventListener('keydown', function(event) {
+    const modal = document.getElementById('helpModal');
+    if (event.key === 'Escape' && modal && !modal.hidden) {
+        closeHelpModal();
+    }
+});
+
 async function initializeApp() {
     console.log('🚀 Inicializando AD Calc com JSONBin...');
     loadSessionCounter();
